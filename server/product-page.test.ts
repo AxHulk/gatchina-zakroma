@@ -99,4 +99,35 @@ describe("products.list", () => {
     expect(Array.isArray(resultAsc)).toBe(true);
     expect(Array.isArray(resultDesc)).toBe(true);
   });
+  
+  it("supports search by product name", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.list({ search: "морков" });
+
+    expect(Array.isArray(result)).toBe(true);
+  });
+  
+  it("returns empty array for non-matching search", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.list({ search: "xyznonexistent123" });
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
+  });
+  
+  it("supports search combined with category filter", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.list({ 
+      search: "морков", 
+      category: "Овощи" 
+    });
+
+    expect(Array.isArray(result)).toBe(true);
+  });
 });

@@ -10,6 +10,7 @@ import {
   getRandomProducts,
   getSimilarProducts,
   getProductCategories,
+  searchProducts,
   getCartItems,
   addToCart,
   updateCartItemQuantity,
@@ -56,11 +57,23 @@ export const appRouter = router({
       .input(z.object({
         category: z.string().optional(),
         sortBy: z.enum(['price_asc', 'price_desc', 'name']).optional(),
+        search: z.string().optional(),
       }).optional())
       .query(async ({ input }) => {
-        let productList = input?.category 
-          ? await getProductsByCategory(input.category)
-          : await getAllProducts();
+        let productList;
+        
+        // If search query is provided, search by title
+        if (input?.search && input.search.trim().length > 0) {
+          productList = await searchProducts(input.search.trim());
+          // Also filter by category if provided
+          if (input?.category) {
+            productList = productList.filter(p => p.category === input.category);
+          }
+        } else if (input?.category) {
+          productList = await getProductsByCategory(input.category);
+        } else {
+          productList = await getAllProducts();
+        }
         
         // Sort products
         if (input?.sortBy === 'price_asc') {

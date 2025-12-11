@@ -100,6 +100,17 @@ export async function getAllProducts() {
   return result;
 }
 
+export async function searchProducts(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const searchTerm = `%${query}%`;
+  const result = await db.select().from(products)
+    .where(sql`${products.title} LIKE ${searchTerm}`)
+    .orderBy(desc(products.createdAt));
+  return result;
+}
+
 export async function getProductsByCategory(category: string) {
   const db = await getDb();
   if (!db) return [];

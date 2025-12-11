@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { trpc } from "@/lib/trpc";
 import ProductCard from "@/components/ProductCard";
 import ContactForm from "@/components/ContactForm";
-import { Package, Users, Truck, Star } from "lucide-react";
+import { Package, Users, Truck, Star, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const allCategories = [
   "Все категории",
@@ -32,6 +33,16 @@ export default function Shop() {
 
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "Все категории");
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "name" | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (categoryFromUrl) {
@@ -42,7 +53,13 @@ export default function Shop() {
   const { data: products = [], isLoading } = trpc.products.list.useQuery({
     category: selectedCategory === "Все категории" ? undefined : selectedCategory,
     sortBy,
+    search: debouncedSearch || undefined,
   });
+  
+  const clearSearch = () => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+  };
 
   return (
     <div className="min-h-screen">
@@ -82,6 +99,33 @@ export default function Shop() {
       {/* Catalog Section */}
       <section className="py-12">
         <div className="container">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Поиск товаров по названию..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {debouncedSearch && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Результаты поиска по запросу: «{debouncedSearch}»
+              </p>
+            )}
+          </div>
+          
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             {/* Category Filter */}
@@ -125,9 +169,17 @@ export default function Shop() {
             <div className="text-center py-16">
               <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">Товары не найдены</h3>
-              <p className="text-muted-foreground">
-                В выбранной категории пока нет товаров
+              <p className="text-muted-foreground mb-4">
+                {debouncedSearch 
+                  ? `По запросу «${debouncedSearch}» ничего не найдено`
+                  : "В выбранной категории пока нет товаров"
+                }
               </p>
+              {debouncedSearch && (
+                <Button variant="outline" onClick={clearSearch}>
+                  Сбросить поиск
+                </Button>
+              )}
             </div>
           ) : (
             <>
