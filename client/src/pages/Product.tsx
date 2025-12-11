@@ -86,13 +86,20 @@ export default function Product() {
     );
   }
   
-  const formatPrice = (price: number) => {
+  const formatPrice = (priceInCents: number) => {
+    // Цена хранится в копейках, делим на 100 для отображения в рублях
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: 'RUB',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(price);
+    }).format(priceInCents / 100);
+  };
+  
+  // Функция для отображения единицы измерения
+  const formatUnit = (unit: string | null) => {
+    if (!unit) return 'КГ';
+    return unit === 'KGM' ? 'КГ' : unit;
   };
   
   const totalPrice = product.price * quantity;
@@ -143,7 +150,7 @@ export default function Product() {
               </Badge>
               {inStock ? (
                 <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  В наличии: {product.quantity} {product.unit}
+                  В наличии: {product.quantity} {formatUnit(product.unit)}
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="bg-red-100 text-red-700">
@@ -166,7 +173,7 @@ export default function Product() {
             <div className="space-y-2">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
-                <span className="text-muted-foreground">/ {product.unit}</span>
+                <span className="text-muted-foreground">/ {formatUnit(product.unit)}</span>
               </div>
               {quantity > 1 && (
                 <p className="text-lg text-muted-foreground">
@@ -182,7 +189,7 @@ export default function Product() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Количество ({product.unit})
+                    Количество ({formatUnit(product.unit)})
                   </label>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center border border-border rounded-lg">
@@ -209,7 +216,7 @@ export default function Product() {
                       </Button>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      Максимум: {product.quantity} {product.unit}
+                      Максимум: {product.quantity} {formatUnit(product.unit)}
                     </span>
                   </div>
                 </div>
@@ -268,7 +275,7 @@ export default function Product() {
                     </p>
                     <p>
                       Категория: <strong>{product.category}</strong>. 
-                      Минимальный заказ от 1 {product.unit}. 
+                      Минимальный заказ от 1 {formatUnit(product.unit)}. 
                       Доставка по Санкт-Петербургу и Ленинградской области.
                     </p>
                   </div>
@@ -296,7 +303,7 @@ export default function Product() {
                 <Package className="h-8 w-8 text-primary flex-shrink-0" />
                 <div>
                   <p className="font-medium text-foreground text-sm">Оптом</p>
-                  <p className="text-xs text-muted-foreground">От 1 {product.unit}</p>
+                  <p className="text-xs text-muted-foreground">От 1 {formatUnit(product.unit)}</p>
                 </div>
               </div>
             </div>
@@ -316,13 +323,14 @@ export default function Product() {
                 </div>
                 <p className="text-muted-foreground mb-6">
                   Оставьте заявку и мы свяжемся с вами для оформления заказа на{" "}
-                  <strong>{product.title}</strong> ({quantity} {product.unit})
+                  <strong>{product.title}</strong> ({quantity} {formatUnit(product.unit)})
                 </p>
                 <ContactForm 
-                  source={`quick_buy_${product.id}_qty_${quantity}`} 
+                  source={`quick_buy_${product.id}_qty_${quantity}`}
+                  title=""
+                  description=""
                   onSuccess={() => {
                     setShowQuickBuy(false);
-                    toast.success("Заявка отправлена! Мы скоро свяжемся с вами.");
                   }}
                 />
               </CardContent>

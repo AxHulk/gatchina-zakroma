@@ -35,6 +35,10 @@ export default function Shop() {
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "name" | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState<number | undefined>(undefined);
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState<number | undefined>(undefined);
   
   // Debounce search query
   useEffect(() => {
@@ -43,6 +47,15 @@ export default function Shop() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+  
+  // Debounce price filters
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMinPrice(minPrice ? parseFloat(minPrice) : undefined);
+      setDebouncedMaxPrice(maxPrice ? parseFloat(maxPrice) : undefined);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [minPrice, maxPrice]);
 
   useEffect(() => {
     if (categoryFromUrl) {
@@ -54,12 +67,30 @@ export default function Shop() {
     category: selectedCategory === "Все категории" ? undefined : selectedCategory,
     sortBy,
     search: debouncedSearch || undefined,
+    minPrice: debouncedMinPrice,
+    maxPrice: debouncedMaxPrice,
   });
   
   const clearSearch = () => {
     setSearchQuery("");
     setDebouncedSearch("");
   };
+  
+  const clearPriceFilter = () => {
+    setMinPrice("");
+    setMaxPrice("");
+    setDebouncedMinPrice(undefined);
+    setDebouncedMaxPrice(undefined);
+  };
+  
+  const clearAllFilters = () => {
+    clearSearch();
+    clearPriceFilter();
+    setSelectedCategory("Все категории");
+    setSortBy(undefined);
+  };
+  
+  const hasActiveFilters = debouncedSearch || debouncedMinPrice !== undefined || debouncedMaxPrice !== undefined || selectedCategory !== "Все категории";
 
   return (
     <div className="min-h-screen">
@@ -99,30 +130,83 @@ export default function Shop() {
       {/* Catalog Section */}
       <section className="py-12">
         <div className="container">
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Поиск товаров по названию..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10"
-              />
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+          {/* Search and Price Filter */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Bar */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Поиск товаров по названию..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-10"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Price Range Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Цена:</span>
+                <Input
+                  type="number"
+                  placeholder="от"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-24"
+                  min="0"
+                />
+                <span className="text-muted-foreground">—</span>
+                <Input
+                  type="number"
+                  placeholder="до"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-24"
+                  min="0"
+                />
+                <span className="text-sm text-muted-foreground">₽</span>
+                {(minPrice || maxPrice) && (
+                  <button
+                    onClick={clearPriceFilter}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="Сбросить фильтр по цене"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
-            {debouncedSearch && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Результаты поиска по запросу: «{debouncedSearch}»
-              </p>
+            
+            {/* Active filters info */}
+            {(debouncedSearch || debouncedMinPrice !== undefined || debouncedMaxPrice !== undefined) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                {debouncedSearch && (
+                  <span className="text-muted-foreground">
+                    Поиск: «{debouncedSearch}»
+                  </span>
+                )}
+                {(debouncedMinPrice !== undefined || debouncedMaxPrice !== undefined) && (
+                  <span className="text-muted-foreground">
+                    Цена: {debouncedMinPrice !== undefined ? `от ${debouncedMinPrice}₽` : ''}
+                    {debouncedMinPrice !== undefined && debouncedMaxPrice !== undefined ? ' ' : ''}
+                    {debouncedMaxPrice !== undefined ? `до ${debouncedMaxPrice}₽` : ''}
+                  </span>
+                )}
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-auto py-1 px-2">
+                    Сбросить все фильтры
+                  </Button>
+                )}
+              </div>
             )}
           </div>
           

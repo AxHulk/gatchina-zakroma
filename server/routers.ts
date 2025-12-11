@@ -58,6 +58,8 @@ export const appRouter = router({
         category: z.string().optional(),
         sortBy: z.enum(['price_asc', 'price_desc', 'name']).optional(),
         search: z.string().optional(),
+        minPrice: z.number().optional(),
+        maxPrice: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         let productList;
@@ -73,6 +75,16 @@ export const appRouter = router({
           productList = await getProductsByCategory(input.category);
         } else {
           productList = await getAllProducts();
+        }
+        
+        // Filter by price range (цены в копейках, входные значения в рублях)
+        if (input?.minPrice !== undefined) {
+          const minPriceInCents = input.minPrice * 100;
+          productList = productList.filter(p => p.price >= minPriceInCents);
+        }
+        if (input?.maxPrice !== undefined) {
+          const maxPriceInCents = input.maxPrice * 100;
+          productList = productList.filter(p => p.price <= maxPriceInCents);
         }
         
         // Sort products
