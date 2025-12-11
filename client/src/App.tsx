@@ -18,6 +18,9 @@ import NotFound from "./pages/NotFound";
 import Product from "./pages/Product";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import PaymentPending from "./pages/PaymentPending";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
 
 function Router() {
   return (
@@ -28,6 +31,9 @@ function Router() {
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-success/:orderNumber" component={OrderSuccess} />
+      <Route path="/payment-pending/:orderNumber" component={PaymentPending} />
+      <Route path="/payment-success/:orderNumber" component={PaymentSuccess} />
+      <Route path="/payment-failed/:orderNumber" component={PaymentFailed} />
       <Route path="/about" component={About} />
       <Route path="/buyback" component={Buyback} />
       <Route path="/contacts" component={Contacts} />

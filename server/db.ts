@@ -367,3 +367,81 @@ export async function getOrdersBySession(sessionId: string) {
   
   return await db.select().from(orders).where(eq(orders.sessionId, sessionId)).orderBy(desc(orders.createdAt));
 }
+
+
+// ============ PAYMENT FUNCTIONS ============
+
+export interface UpdatePaymentInput {
+  orderNumber: string;
+  paymentId?: string;
+  paymentProvider?: string;
+  paymentUrl?: string;
+  paymentStatus?: "pending" | "processing" | "paid" | "failed" | "refunded";
+  paidAt?: Date;
+}
+
+export async function updateOrderPayment(input: UpdatePaymentInput) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const updateData: Record<string, unknown> = {};
+  
+  if (input.paymentId !== undefined) updateData.paymentId = input.paymentId;
+  if (input.paymentProvider !== undefined) updateData.paymentProvider = input.paymentProvider;
+  if (input.paymentUrl !== undefined) updateData.paymentUrl = input.paymentUrl;
+  if (input.paymentStatus !== undefined) updateData.paymentStatus = input.paymentStatus;
+  if (input.paidAt !== undefined) updateData.paidAt = input.paidAt;
+  
+  if (Object.keys(updateData).length === 0) return null;
+  
+  await db.update(orders)
+    .set(updateData)
+    .where(eq(orders.orderNumber, input.orderNumber));
+  
+  return await getOrderByNumber(input.orderNumber);
+}
+
+export async function getOrderByPaymentId(paymentId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(orders).where(eq(orders.paymentId, paymentId)).limit(1);
+  if (result.length === 0) return null;
+  
+  const order = result[0];
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
+  
+  return { ...order, items };
+}
+
+export async function confirmOrderPayment(orderNumber: string, paymentId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.update(orders)
+    .set({
+      paymentStatus: "paid",
+      paymentId: paymentId,
+      paidAt: new Date(),
+      status: "confirmed",
+    })
+    .where(eq(orders.orderNumber, orderNumber));
+  
+  return await getOrderByNumber(orderNumber);
+}
+
+export async function failOrderPayment(orderNumber: string, paymentId?: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const updateData: Record<string, unknown> = {
+    paymentStatus: "failed",
+  };
+  if (paymentId) updateData.paymentId = paymentId;
+  
+  await db.update(orders)
+    .set(updateData)
+    .where(eq(orders.orderNumber, orderNumber));
+  
+  return await getOrderByNumber(orderNumber);
+}
