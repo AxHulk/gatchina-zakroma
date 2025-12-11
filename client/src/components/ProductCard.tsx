@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 
 interface Product {
   id: number;
@@ -72,34 +72,38 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="aspect-square relative overflow-hidden bg-muted">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <span className="text-4xl">🥬</span>
-          </div>
-        )}
-        {product.quantity <= 0 && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-semibold">Нет в наличии</span>
-          </div>
-        )}
-      </div>
+      <Link href={`/product/${product.id}`} className="block">
+        <div className="aspect-square relative overflow-hidden bg-muted">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              <span className="text-4xl">🥬</span>
+            </div>
+          )}
+          {product.quantity <= 0 && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="text-white font-semibold">Нет в наличии</span>
+            </div>
+          )}
+        </div>
+      </Link>
       <CardContent className="p-4">
         <div className="mb-2">
           <span className="text-xs text-muted-foreground uppercase tracking-wide">
             {product.category}
           </span>
         </div>
-        <h3 className="font-semibold text-foreground mb-2 line-clamp-2 min-h-[2.5rem]">
-          {product.title}
-        </h3>
+        <Link href={`/product/${product.id}`} className="block">
+          <h3 className="font-semibold text-foreground mb-2 line-clamp-2 min-h-[2.5rem] hover:text-primary transition-colors">
+            {product.title}
+          </h3>
+        </Link>
         {product.description && (
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {product.description}

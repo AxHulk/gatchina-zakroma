@@ -15,12 +15,14 @@ import Privacy from "./pages/Privacy";
 import Offer from "./pages/Offer";
 import Returns from "./pages/Returns";
 import NotFound from "./pages/NotFound";
+import Product from "./pages/Product";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/shop" component={Shop} />
+      <Route path="/product/:id" component={Product} />
       <Route path="/cart" component={Cart} />
       <Route path="/about" component={About} />
       <Route path="/buyback" component={Buyback} />

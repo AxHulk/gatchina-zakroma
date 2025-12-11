@@ -12,12 +12,14 @@ interface ContactFormProps {
   source?: string;
   title?: string;
   description?: string;
+  onSuccess?: () => void;
 }
 
 export default function ContactForm({ 
   source = "home", 
   title = "Свяжитесь с нами",
-  description = "Оставьте заявку, и наши менеджеры оперативно свяжутся с вами"
+  description = "Оставьте заявку, и наши менеджеры оперативно свяжутся с вами",
+  onSuccess
 }: ContactFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +33,7 @@ export default function ContactForm({
       setEmail("");
       setPhone("");
       setConsent(false);
+      onSuccess?.();
     },
     onError: (error) => {
       toast.error("Ошибка при отправке заявки. Попробуйте позже.");
