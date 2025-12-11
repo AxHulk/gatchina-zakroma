@@ -124,6 +124,23 @@ export async function getRandomProducts(limit: number = 9) {
   return result;
 }
 
+export async function getSimilarProducts(productId: number, category: string, limit: number = 4) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get products from the same category, excluding the current product
+  const result = await db.select()
+    .from(products)
+    .where(and(
+      eq(products.category, category),
+      sql`${products.id} != ${productId}`
+    ))
+    .orderBy(sql`RAND()`)
+    .limit(limit);
+  
+  return result;
+}
+
 export async function getProductCategories() {
   const db = await getDb();
   if (!db) return [];

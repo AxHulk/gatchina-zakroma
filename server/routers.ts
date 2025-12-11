@@ -8,6 +8,7 @@ import {
   getProductsByCategory, 
   getProductById, 
   getRandomProducts,
+  getSimilarProducts,
   getProductCategories,
   getCartItems,
   addToCart,
@@ -80,6 +81,16 @@ export const appRouter = router({
       .input(z.object({ limit: z.number().default(9) }).optional())
       .query(async ({ input }) => {
         return await getRandomProducts(input?.limit || 9);
+      }),
+    
+    similar: publicProcedure
+      .input(z.object({ 
+        productId: z.number(),
+        category: z.string(),
+        limit: z.number().default(4)
+      }))
+      .query(async ({ input }) => {
+        return await getSimilarProducts(input.productId, input.category, input.limit);
       }),
     
     categories: publicProcedure.query(async () => {

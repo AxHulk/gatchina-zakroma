@@ -40,6 +40,36 @@ describe("products.getById", () => {
   });
 });
 
+describe("products.similar", () => {
+  it("returns array of similar products", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.similar({ 
+      productId: 1, 
+      category: "Овощи", 
+      limit: 4 
+    });
+
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("excludes the current product from results", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.similar({ 
+      productId: 1, 
+      category: "Овощи", 
+      limit: 4 
+    });
+
+    // Verify that product with id 1 is not in the results
+    const containsCurrentProduct = result.some((p: { id: number }) => p.id === 1);
+    expect(containsCurrentProduct).toBe(false);
+  });
+});
+
 describe("products.list", () => {
   it("returns array of products", async () => {
     const ctx = createPublicContext();

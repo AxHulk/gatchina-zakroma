@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
 import ContactForm from "@/components/ContactForm";
+import ProductCard from "@/components/ProductCard";
 
 export default function Product() {
   const params = useParams<{ id: string }>();
@@ -20,6 +21,11 @@ export default function Product() {
   const { data: product, isLoading, error } = trpc.products.getById.useQuery(
     { id: productId },
     { enabled: productId > 0 }
+  );
+  
+  const { data: similarProducts } = trpc.products.similar.useQuery(
+    { productId, category: product?.category || "", limit: 4 },
+    { enabled: !!product?.category }
   );
   
   const utils = trpc.useUtils();
@@ -321,6 +327,19 @@ export default function Product() {
                 />
               </CardContent>
             </Card>
+          </div>
+        )}
+        
+        {/* Similar products */}
+        {similarProducts && similarProducts.length > 0 && (
+          <div className="mt-16">
+            <Separator className="mb-12" />
+            <h2 className="text-2xl font-bold text-foreground mb-6">Похожие товары</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {similarProducts.map((similarProduct) => (
+                <ProductCard key={similarProduct.id} product={similarProduct} />
+              ))}
+            </div>
           </div>
         )}
         
