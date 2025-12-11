@@ -16,7 +16,10 @@ import {
   removeFromCart,
   clearCart,
   getCartCount,
-  createContactRequest
+  createContactRequest,
+  createOrder,
+  getOrderByNumber,
+  getOrdersBySession
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 
@@ -169,6 +172,68 @@ export const appRouter = router({
         
         return { success: true };
       }),
+  }),
+
+  // Orders router
+  orders: router({
+    create: publicProcedure
+      .input(z.object({
+        customerName: z.string().min(1),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(1),
+        deliveryMethod: z.enum(['pickup', 'delivery']),
+        deliveryAddress: z.string().optional(),
+        deliveryCity: z.string().optional(),
+        deliveryComment: z.string().optional(),
+        paymentMethod: z.enum(['cash', 'card', 'invoice']),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const sessionId = getSessionId(ctx);
+        
+        const order = await createOrder({
+          sessionId,
+          ...input,
+        });
+        
+        if (!order) {
+          throw new Error('Не удалось создать заказ');
+        }
+        
+        // Format order items for notification
+        const itemsList = order.items.map(item => 
+          `- ${item.productTitle}: ${item.quantity} ${item.unit || 'шт'} x ${(item.price / 100).toFixed(2)} ₽ = ${(item.subtotal / 100).toFixed(2)} ₽`
+        ).join('\n');
+        
+        const deliveryMethodText = input.deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка';
+        const paymentMethodText = {
+          cash: 'Наличными при получении',
+          card: 'Картой при получении',
+          invoice: 'Безналичный расчет',
+        }[input.paymentMethod];
+        
+        // Notify owner about new order
+        await notifyOwner({
+          title: `Новый заказ ${order.orderNumber}`,
+          content: `Заказ: ${order.orderNumber}\n\nКлиент:\nИмя: ${input.customerName}\nEmail: ${input.customerEmail}\nТелефон: ${input.customerPhone}\n\nДоставка: ${deliveryMethodText}${input.deliveryAddress ? `\nАдрес: ${input.deliveryAddress}` : ''}${input.deliveryCity ? `, ${input.deliveryCity}` : ''}${input.deliveryComment ? `\nКомментарий: ${input.deliveryComment}` : ''}\n\nОплата: ${paymentMethodText}\n\nТовары:\n${itemsList}\n\nПодитог: ${((order.subtotal ?? 0) / 100).toFixed(2)} ₽\nДоставка: ${((order.deliveryFee ?? 0) / 100).toFixed(2)} ₽\nИТОГО: ${((order.total ?? 0) / 100).toFixed(2)} ₽`,
+        });
+        
+        return { 
+          success: true, 
+          orderNumber: order.orderNumber,
+          total: order.total,
+        };
+      }),
+    
+    getByNumber: publicProcedure
+      .input(z.object({ orderNumber: z.string() }))
+      .query(async ({ input }) => {
+        return await getOrderByNumber(input.orderNumber);
+      }),
+    
+    myOrders: publicProcedure.query(async ({ ctx }) => {
+      const sessionId = getSessionId(ctx);
+      return await getOrdersBySession(sessionId);
+    }),
   }),
 });
 

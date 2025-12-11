@@ -1,6 +1,6 @@
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, cartItems, contactRequests, InsertProduct, InsertContactRequest, InsertCartItem } from "../drizzle/schema";
+import { InsertUser, users, products, cartItems, contactRequests, orders, orderItems, InsertProduct, InsertContactRequest, InsertCartItem, InsertOrder, InsertOrderItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -252,4 +252,118 @@ export async function getAllContactRequests() {
   if (!db) return [];
   
   return await db.select().from(contactRequests).orderBy(desc(contactRequests.createdAt));
+}
+
+// ============ ORDER FUNCTIONS ============
+
+function generateOrderNumber(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `GZ-${timestamp}-${random}`;
+}
+
+export interface CreateOrderInput {
+  sessionId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryMethod: "pickup" | "delivery";
+  deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryComment?: string;
+  paymentMethod: "cash" | "card" | "invoice";
+}
+
+export async function createOrder(input: CreateOrderInput) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get cart items with products
+  const cartItemsWithProducts = await getCartItems(input.sessionId);
+  if (cartItemsWithProducts.length === 0) {
+    throw new Error("Корзина пуста");
+  }
+  
+  // Calculate totals
+  let subtotal = 0;
+  const orderItemsData: InsertOrderItem[] = [];
+  
+  for (const item of cartItemsWithProducts) {
+    if (!item.product) continue;
+    const itemSubtotal = item.product.price * item.quantity;
+    subtotal += itemSubtotal;
+    
+    orderItemsData.push({
+      orderId: 0, // Will be set after order creation
+      productId: item.product.id,
+      productTitle: item.product.title,
+      productSku: item.product.sku,
+      price: item.product.price,
+      quantity: item.quantity,
+      unit: item.product.unit,
+      subtotal: itemSubtotal,
+    });
+  }
+  
+  // Calculate delivery fee (free for pickup, 500 rubles for delivery)
+  const deliveryFee = input.deliveryMethod === "delivery" ? 50000 : 0; // 500 rubles in kopecks
+  const total = subtotal + deliveryFee;
+  
+  const orderNumber = generateOrderNumber();
+  
+  // Create order
+  const orderData: InsertOrder = {
+    orderNumber,
+    sessionId: input.sessionId,
+    customerName: input.customerName,
+    customerEmail: input.customerEmail,
+    customerPhone: input.customerPhone,
+    deliveryMethod: input.deliveryMethod,
+    deliveryAddress: input.deliveryAddress || null,
+    deliveryCity: input.deliveryCity || null,
+    deliveryComment: input.deliveryComment || null,
+    paymentMethod: input.paymentMethod,
+    subtotal,
+    deliveryFee,
+    total,
+    status: "pending",
+  };
+  
+  const result = await db.insert(orders).values(orderData);
+  const orderId = Number(result[0].insertId);
+  
+  // Create order items
+  for (const item of orderItemsData) {
+    item.orderId = orderId;
+    await db.insert(orderItems).values(item);
+  }
+  
+  // Clear cart
+  await clearCart(input.sessionId);
+  
+  return {
+    id: orderId,
+    ...orderData,
+    items: orderItemsData,
+  };
+}
+
+export async function getOrderByNumber(orderNumber: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+  if (result.length === 0) return null;
+  
+  const order = result[0];
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
+  
+  return { ...order, items };
+}
+
+export async function getOrdersBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(orders).where(eq(orders.sessionId, sessionId)).orderBy(desc(orders.createdAt));
 }

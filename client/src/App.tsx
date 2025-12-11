@@ -16,6 +16,8 @@ import Offer from "./pages/Offer";
 import Returns from "./pages/Returns";
 import NotFound from "./pages/NotFound";
 import Product from "./pages/Product";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 
 function Router() {
   return (
@@ -24,6 +26,8 @@ function Router() {
       <Route path="/shop" component={Shop} />
       <Route path="/product/:id" component={Product} />
       <Route path="/cart" component={Cart} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/order-success/:orderNumber" component={OrderSuccess} />
       <Route path="/about" component={About} />
       <Route path="/buyback" component={Buyback} />
       <Route path="/contacts" component={Contacts} />

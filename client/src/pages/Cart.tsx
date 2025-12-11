@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 
 export default function Cart() {
+  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const { data: cartItems = [], isLoading } = trpc.cart.get.useQuery();
 
@@ -238,7 +239,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <Button className="w-full" size="lg" onClick={() => toast.info("Функция оформления заказа скоро будет доступна")}>
+                <Button className="w-full" size="lg" onClick={() => setLocation("/checkout")}>
                   Оформить заказ
                 </Button>
 

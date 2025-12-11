@@ -68,3 +68,59 @@ export const cartItems = mysqlTable("cart_items", {
 
 export type CartItem = typeof cartItems.$inferSelect;
 export type InsertCartItem = typeof cartItems.$inferInsert;
+
+/**
+ * Orders table for order management
+ */
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderNumber: varchar("orderNumber", { length: 32 }).notNull().unique(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  
+  // Customer info
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 32 }).notNull(),
+  
+  // Delivery info
+  deliveryMethod: mysqlEnum("deliveryMethod", ["pickup", "delivery"]).notNull().default("delivery"),
+  deliveryAddress: text("deliveryAddress"),
+  deliveryCity: varchar("deliveryCity", { length: 128 }),
+  deliveryComment: text("deliveryComment"),
+  
+  // Payment info
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "card", "invoice"]).notNull().default("cash"),
+  
+  // Order totals
+  subtotal: int("subtotal").notNull().default(0),
+  deliveryFee: int("deliveryFee").notNull().default(0),
+  total: int("total").notNull().default(0),
+  
+  // Status
+  status: mysqlEnum("status", ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]).notNull().default("pending"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+/**
+ * Order items - products in an order
+ */
+export const orderItems = mysqlTable("order_items", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  productId: int("productId").notNull(),
+  productTitle: varchar("productTitle", { length: 255 }).notNull(),
+  productSku: varchar("productSku", { length: 32 }).notNull(),
+  price: int("price").notNull(),
+  quantity: int("quantity").notNull(),
+  unit: varchar("unit", { length: 16 }).default("KGM"),
+  subtotal: int("subtotal").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
