@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, products, cartItems, contactRequests, InsertProduct, InsertContactRequest, InsertCartItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -17,6 +16,8 @@ export async function getDb() {
   }
   return _db;
 }
+
+// ============ USER FUNCTIONS ============
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -89,4 +90,149 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ============ PRODUCT FUNCTIONS ============
+
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(products).orderBy(desc(products.createdAt));
+  return result;
+}
+
+export async function getProductsByCategory(category: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(products).where(eq(products.category, category));
+  return result;
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getRandomProducts(limit: number = 9) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(products).orderBy(sql`RAND()`).limit(limit);
+  return result;
+}
+
+export async function getProductCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.selectDistinct({ category: products.category }).from(products);
+  return result.map(r => r.category);
+}
+
+// ============ CART FUNCTIONS ============
+
+export async function getCartItems(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const items = await db.select().from(cartItems).where(eq(cartItems.sessionId, sessionId));
+  
+  // Get product details for each cart item
+  const productIds = items.map(item => item.productId);
+  if (productIds.length === 0) return [];
+  
+  const productList = await db.select().from(products).where(inArray(products.id, productIds));
+  const productMap = new Map(productList.map(p => [p.id, p]));
+  
+  return items.map(item => ({
+    ...item,
+    product: productMap.get(item.productId) || null
+  }));
+}
+
+export async function addToCart(sessionId: string, productId: number, quantity: number = 1) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Check if item already exists in cart
+  const existing = await db.select().from(cartItems)
+    .where(and(eq(cartItems.sessionId, sessionId), eq(cartItems.productId, productId)))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Update quantity
+    await db.update(cartItems)
+      .set({ quantity: existing[0].quantity + quantity })
+      .where(eq(cartItems.id, existing[0].id));
+    return { ...existing[0], quantity: existing[0].quantity + quantity };
+  }
+  
+  // Insert new item
+  await db.insert(cartItems).values({ sessionId, productId, quantity });
+  return { sessionId, productId, quantity };
+}
+
+export async function updateCartItemQuantity(sessionId: string, productId: number, quantity: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  if (quantity <= 0) {
+    await db.delete(cartItems)
+      .where(and(eq(cartItems.sessionId, sessionId), eq(cartItems.productId, productId)));
+    return null;
+  }
+  
+  await db.update(cartItems)
+    .set({ quantity })
+    .where(and(eq(cartItems.sessionId, sessionId), eq(cartItems.productId, productId)));
+  
+  return { sessionId, productId, quantity };
+}
+
+export async function removeFromCart(sessionId: string, productId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  await db.delete(cartItems)
+    .where(and(eq(cartItems.sessionId, sessionId), eq(cartItems.productId, productId)));
+  return true;
+}
+
+export async function clearCart(sessionId: string) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  await db.delete(cartItems).where(eq(cartItems.sessionId, sessionId));
+  return true;
+}
+
+export async function getCartCount(sessionId: string) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db.select({ count: sql<number>`SUM(quantity)` })
+    .from(cartItems)
+    .where(eq(cartItems.sessionId, sessionId));
+  
+  return result[0]?.count || 0;
+}
+
+// ============ CONTACT REQUEST FUNCTIONS ============
+
+export async function createContactRequest(data: InsertContactRequest) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.insert(contactRequests).values(data);
+  return data;
+}
+
+export async function getAllContactRequests() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(contactRequests).orderBy(desc(contactRequests.createdAt));
+}
