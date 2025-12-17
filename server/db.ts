@@ -131,7 +131,11 @@ export async function getRandomProducts(limit: number = 9) {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db.select().from(products).orderBy(sql`RAND()`).limit(limit);
+  // Получаем только товары в наличии (quantity > 0)
+  const result = await db.select().from(products)
+    .where(sql`${products.quantity} > 0`)
+    .orderBy(sql`RAND()`)
+    .limit(limit);
   return result;
 }
 

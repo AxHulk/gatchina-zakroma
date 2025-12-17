@@ -54,7 +54,13 @@ export default function Product() {
   };
   
   const handleQuickBuy = () => {
-    setShowQuickBuy(true);
+    if (product) {
+      addToCartMutation.mutate({ productId: product.id, quantity }, {
+        onSuccess: () => {
+          setLocation("/cart");
+        }
+      });
+    }
   };
   
   if (isLoading) {
