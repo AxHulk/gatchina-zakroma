@@ -1,0 +1,73 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+        run: |
+          ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
+            set -e
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd ${PROJECT_PATH}
+            
+            # Pull latest changes
+            echo "📥 Pulling latest changes from GitHub..."
+            git pull origin main
+            
+            # Install dependencies (if package.json changed)
+            echo "📦 Installing dependencies..."
+            npm install --production
+            
+            # Build the project
+            echo "🔨 Building project..."
+            npm run build
+            
+            # Restart PM2 process
+            echo "🔄 Restarting application..."
+            pm2 restart gatchina-zakroma
+            
+            # Clear nginx cache
+            echo "🧹 Clearing nginx cache..."
+            rm -rf /var/cache/nginx/catalog/*
+            nginx -s reload
+            
+            echo "✅ Deployment completed successfully!"
+          EOF
+      
+      - name: Verify deployment
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          echo "🔍 Verifying deployment..."
+          sleep 5
+          curl -f https://gzakroma.ru/ || exit 1
+          echo "✅ Site is up and running!"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Check the logs above for details."
