@@ -29,6 +29,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/delivery" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  Доставка
+                </Link>
+              </li>
+              <li>
                 <Link href="/buyback" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                   Сдача продукции
                 </Link>
@@ -74,6 +79,7 @@ export default function Footer() {
             <div className="text-sm text-primary-foreground/80 space-y-2">
               <p>ИП Шевцов Антон Александрович</p>
               <p>ИНН 471905083025</p>
+              <p>ОГРНИП 325470400045670</p>
               <p className="leading-relaxed">
                 188340, Ленинградская область, р-н Гатчинский, деревня Истинка, д. 42
               </p>
@@ -87,9 +93,9 @@ export default function Footer() {
             <p className="text-sm text-primary-foreground/60">
               © {new Date().getFullYear()} Гатчинские закрома. Все права защищены.
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap justify-center">
               <span className="text-sm text-primary-foreground/60">Принимаем к оплате:</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
                 {/* Mir */}
                 <div className="bg-white rounded px-2 py-1">
                   <svg viewBox="0 0 60 20" className="h-5 w-auto">
@@ -109,6 +115,19 @@ export default function Footer() {
                     <circle cx="25" cy="10" r="8" fill="#F79E1B"/>
                     <text x="38" y="14" fontSize="8" fontWeight="bold" fill="#000">MC</text>
                   </svg>
+                </div>
+                {/* 3D Secure */}
+                <div className="bg-white rounded px-2 py-1 flex items-center justify-center" title="3D Secure">
+                  <svg viewBox="0 0 70 28" className="h-5 w-auto">
+                    {/* Shield outline */}
+                    <path d="M35 2 C35 2 22 4 18 6 C18 6 16 14 18 20 C20 24 28 27 35 28 C42 27 50 24 52 20 C54 14 52 6 52 6 C48 4 35 2 35 2Z" fill="none" stroke="#1A3A5C" strokeWidth="1.5"/>
+                    <text x="24" y="15" fontSize="9" fontWeight="bold" fill="#1A3A5C">3D</text>
+                    <text x="19" y="23" fontSize="6" fontWeight="bold" fill="#1A3A5C">SECURE</text>
+                  </svg>
+                </div>
+                {/* СБП */}
+                <div className="bg-white rounded px-2 py-1 flex items-center justify-center" title="Система быстрых платежей">
+                  <img src="/sbp-logo.png" alt="СБП" className="h-5 w-auto" />
                 </div>
               </div>
             </div>

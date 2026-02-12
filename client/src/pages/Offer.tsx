@@ -19,7 +19,7 @@ export default function Offer() {
           </p>
 
           <h2 className="text-xl font-semibold mt-8 mb-4">1. Общие положения</h2>
-          <p className="text-muted-foreground mb-4">1.1. Настоящий документ является официальным предложением (публичной офертой) ИП Шевцов Антон Александрович (ОГРНИП 325344300049428, ИНН 780627051300), именуемого в дальнейшем «Продавец», и содержит все существенные условия продажи товаров дистанционным способом.</p>
+          <p className="text-muted-foreground mb-4">1.1. Настоящий документ является официальным предложением (публичной офертой) ИП Шевцов Антон Александрович (ОГРНИП 325470400045670, ИНН 471905083025), именуемого в дальнейшем «Продавец», и содержит все существенные условия продажи товаров дистанционным способом.</p>
           <p className="text-muted-foreground mb-4">1.2. Публичная оферта адресована физическим лицам, именуемым в дальнейшем «Покупатель», и вместе с Продавцом именуемые «Стороны».</p>
           <p className="text-muted-foreground mb-4">1.3. Моментом полного и безоговорочного принятия Покупателем предложения Продавца (акцептом) заключить договор купли-продажи Товара, считается факт оформления Покупателем заказа на условиях настоящей Оферты.</p>
           <p className="text-muted-foreground mb-4">1.4. Осуществляя заказ, Покупатель соглашается с условиями продажи Товара, изложенными в настоящей Оферте.</p>
@@ -28,7 +28,7 @@ export default function Offer() {
           <p className="text-muted-foreground mb-4">1.7. Продавец оставляет за собой право вносить изменения в настоящую Оферту, в связи с чем Покупатель обязуется регулярно отслеживать изменения в Оферте, размещенной на Сайте.</p>
 
           <h2 className="text-xl font-semibold mt-8 mb-4">2. Термины и определения</h2>
-          <p className="text-muted-foreground mb-4"><strong>Продавец</strong> – ИП Шевцов Антон Александрович (ОГРНИП 325344300049428, ИНН 780627051300).</p>
+          <p className="text-muted-foreground mb-4"><strong>Продавец</strong> – ИП Шевцов Антон Александрович (ОГРНИП 325470400045670, ИНН 471905083025).</p>
           <p className="text-muted-foreground mb-4"><strong>Покупатель</strong> – физическое лицо, заключившее с Продавцом Договор на условиях Оферты.</p>
           <p className="text-muted-foreground mb-4"><strong>Товар</strong> – продовольственные товары, представленные к продаже на Сайте.</p>
           <p className="text-muted-foreground mb-4"><strong>Заказ</strong> – оформленный запрос Покупателя на приобретение и доставку по указанному адресу перечня Товаров, выбранных на Сайте.</p>
@@ -101,8 +101,8 @@ export default function Offer() {
           <h2 className="text-xl font-semibold mt-8 mb-4">Реквизиты Продавца</h2>
           <div className="bg-muted/30 p-6 rounded-lg">
             <p className="text-muted-foreground"><strong>ИП Шевцов Антон Александрович</strong></p>
-            <p className="text-muted-foreground">ОГРНИП: 325344300049428</p>
-            <p className="text-muted-foreground">ИНН: 780627051300</p>
+            <p className="text-muted-foreground">ОГРНИП: 325470400045670</p>
+            <p className="text-muted-foreground">ИНН: 471905083025</p>
             <p className="text-muted-foreground">Адрес: 188340, Ленинградская область, р-н Гатчинский, деревня Истинка, д. 42</p>
             <p className="text-muted-foreground">Телефон: <a href="tel:+78129894828" className="text-primary hover:underline">+7 (812) 98-94-828</a></p>
             <p className="text-muted-foreground">Email: <a href="mailto:info@gzakroma.ru" className="text-primary hover:underline">info@gzakroma.ru</a></p>

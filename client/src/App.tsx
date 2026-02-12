@@ -21,6 +21,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import PaymentPending from "./pages/PaymentPending";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+import Delivery from "./pages/Delivery";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/payment-pending/:orderNumber" component={PaymentPending} />
       <Route path="/payment-success/:orderNumber" component={PaymentSuccess} />
       <Route path="/payment-failed/:orderNumber" component={PaymentFailed} />
+      <Route path="/delivery" component={Delivery} />
       <Route path="/about" component={About} />
       <Route path="/buyback" component={Buyback} />
       <Route path="/contacts" component={Contacts} />
