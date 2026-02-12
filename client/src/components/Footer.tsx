@@ -19,7 +19,8 @@ export default function Footer() {
               <img 
                 src="/logo.png" 
                 alt="Гатчинские закрома" 
-                className="h-16 w-auto brightness-0 invert"
+                className="h-16 w-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Link>
             <p className="text-sm text-primary-foreground/80 leading-relaxed">
@@ -101,9 +102,7 @@ export default function Footer() {
             <p className="text-sm text-primary-foreground/60">
               © {new Date().getFullYear()} Гатчинские закрома. Все права защищены.
             </p>
-            <div className="flex items-center gap-4 flex-wrap justify-center">
-              <span className="text-sm text-primary-foreground/60">Принимаем к оплате:</span>
-              <div className="flex items-center gap-3 flex-wrap justify-center">
+            <div className="flex items-center gap-3 flex-wrap justify-center">
                 <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="МИР">
                   <img src={PAYMENT_LOGOS.mir} alt="МИР" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
@@ -119,7 +118,6 @@ export default function Footer() {
                 <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="Система быстрых платежей">
                   <img src={PAYMENT_LOGOS.sbp} alt="СБП" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
-              </div>
             </div>
           </div>
         </div>
