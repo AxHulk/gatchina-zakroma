@@ -91,6 +91,11 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="text-white font-semibold">Нет в наличии</span>
             </div>
           )}
+          {product.quantity > 0 && product.quantity < 10 && (
+            <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm">
+              Мало на складе
+            </div>
+          )}
         </div>
       </Link>
       <CardContent className="p-4">

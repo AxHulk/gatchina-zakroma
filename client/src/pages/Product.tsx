@@ -155,9 +155,16 @@ export default function Product() {
                 {product.category}
               </Badge>
               {inStock ? (
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  В наличии: {product.quantity} {formatUnit(product.unit)}
-                </Badge>
+                <>
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    В наличии
+                  </Badge>
+                  {product.quantity < 10 && (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+                      Мало на складе
+                    </Badge>
+                  )}
+                </>
               ) : (
                 <Badge variant="secondary" className="bg-red-100 text-red-700">
                   Нет в наличии
