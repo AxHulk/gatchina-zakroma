@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN quantity > 0 THEN 1 ELSE 0 END) as in_stock, SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END) as out_of_stock FROM products;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2hZTkvnhWtkwpNu.7428adf1c145 --database Nt79emaCaXWand8b7iQ2sX --execute SELECT COUNT(*) as total, SUM(CASE WHEN quantity > 0 THEN 1 ELSE 0 END) as in_stock, SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END) as out_of_stock FROM products;",
+  "rows": [
+    {
+      "total": "104",
+      "in_stock": "104",
+      "out_of_stock": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tin_stock\tout_of_stock\n104\t104\t0\n",
+  "stderr": "",
+  "execution_time_ms": 250
+}

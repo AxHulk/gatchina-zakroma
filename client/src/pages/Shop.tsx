@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import ProductCard from "@/components/ProductCard";
 import ContactForm from "@/components/ContactForm";
-import { Package, Users, Truck, Star, Search, X } from "lucide-react";
+import { Package, Users, Truck, Star, Search, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+const ITEMS_PER_PAGE = 12;
 
 const allCategories = [
   "Все категории",
@@ -39,6 +41,7 @@ export default function Shop() {
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [debouncedMinPrice, setDebouncedMinPrice] = useState<number | undefined>(undefined);
   const [debouncedMaxPrice, setDebouncedMaxPrice] = useState<number | undefined>(undefined);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   
   // Debounce search query
   useEffect(() => {
@@ -63,6 +66,11 @@ export default function Shop() {
     }
   }, [categoryFromUrl]);
 
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [selectedCategory, sortBy, debouncedSearch, debouncedMinPrice, debouncedMaxPrice]);
+
   const { data: products = [], isLoading } = trpc.products.list.useQuery({
     category: selectedCategory === "Все категории" ? undefined : selectedCategory,
     sortBy,
@@ -70,6 +78,18 @@ export default function Shop() {
     minPrice: debouncedMinPrice,
     maxPrice: debouncedMaxPrice,
   });
+
+  // Paginated products
+  const visibleProducts = useMemo(() => {
+    return products.slice(0, visibleCount);
+  }, [products, visibleCount]);
+
+  const hasMore = visibleCount < products.length;
+  const remainingCount = products.length - visibleCount;
+  
+  const loadMore = () => {
+    setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+  };
   
   const clearSearch = () => {
     setSearchQuery("");
@@ -245,7 +265,7 @@ export default function Shop() {
           {/* Products Grid */}
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(12)].map((_, i) => (
+              {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
                 <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
               ))}
             </div>
@@ -269,12 +289,35 @@ export default function Shop() {
             <>
               <div className="mb-4 text-muted-foreground">
                 Найдено товаров: {products.length}
+                {products.length > ITEMS_PER_PAGE && (
+                  <span className="ml-2">
+                    (показано {Math.min(visibleCount, products.length)})
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
+                {visibleProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-10 text-center">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={loadMore}
+                    className="min-w-[240px] gap-2"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                    Загрузить ещё
+                    <span className="text-muted-foreground ml-1">
+                      ({Math.min(ITEMS_PER_PAGE, remainingCount)} из {remainingCount})
+                    </span>
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

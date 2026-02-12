@@ -1,5 +1,13 @@
 import { Link } from "wouter";
 
+const PAYMENT_LOGOS = {
+  mir: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104002998/wLErFXcySHwWeBFY.png",
+  visa: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104002998/QrKjnqaEzoKvIYWo.png",
+  mastercard: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104002998/yukXzlrdLYYAHIHg.png",
+  secure3d: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104002998/KMZQUSwKFzSyjBxy.png",
+  sbp: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104002998/CPUUrPuHQlxmnKBi.png",
+};
+
 export default function Footer() {
   return (
     <footer className="bg-primary text-primary-foreground mt-auto">
@@ -95,39 +103,21 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
               <span className="text-sm text-primary-foreground/60">Принимаем к оплате:</span>
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                {/* Mir */}
-                <div className="bg-white rounded px-2 py-1">
-                  <svg viewBox="0 0 60 20" className="h-5 w-auto">
-                    <text x="5" y="15" fontSize="12" fontWeight="bold" fill="#4DB45E">МИР</text>
-                  </svg>
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="МИР">
+                  <img src={PAYMENT_LOGOS.mir} alt="МИР" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
-                {/* Visa */}
-                <div className="bg-white rounded px-2 py-1">
-                  <svg viewBox="0 0 60 20" className="h-5 w-auto">
-                    <text x="5" y="15" fontSize="12" fontWeight="bold" fill="#1A1F71">VISA</text>
-                  </svg>
+                <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="Visa">
+                  <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
-                {/* MasterCard */}
-                <div className="bg-white rounded px-2 py-1">
-                  <svg viewBox="0 0 80 20" className="h-5 w-auto">
-                    <circle cx="15" cy="10" r="8" fill="#EB001B"/>
-                    <circle cx="25" cy="10" r="8" fill="#F79E1B"/>
-                    <text x="38" y="14" fontSize="8" fontWeight="bold" fill="#000">MC</text>
-                  </svg>
+                <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="MasterCard">
+                  <img src={PAYMENT_LOGOS.mastercard} alt="MasterCard" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
-                {/* 3D Secure */}
-                <div className="bg-white rounded px-2 py-1 flex items-center justify-center" title="3D Secure">
-                  <svg viewBox="0 0 70 28" className="h-5 w-auto">
-                    {/* Shield outline */}
-                    <path d="M35 2 C35 2 22 4 18 6 C18 6 16 14 18 20 C20 24 28 27 35 28 C42 27 50 24 52 20 C54 14 52 6 52 6 C48 4 35 2 35 2Z" fill="none" stroke="#1A3A5C" strokeWidth="1.5"/>
-                    <text x="24" y="15" fontSize="9" fontWeight="bold" fill="#1A3A5C">3D</text>
-                    <text x="19" y="23" fontSize="6" fontWeight="bold" fill="#1A3A5C">SECURE</text>
-                  </svg>
+                <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="3D Secure">
+                  <img src={PAYMENT_LOGOS.secure3d} alt="3D Secure" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
-                {/* СБП */}
-                <div className="bg-white rounded px-2 py-1 flex items-center justify-center" title="Система быстрых платежей">
-                  <img src="/sbp-logo.png" alt="СБП" className="h-5 w-auto" />
+                <div className="bg-white rounded-md px-2.5 py-1.5 flex items-center justify-center" title="Система быстрых платежей">
+                  <img src={PAYMENT_LOGOS.sbp} alt="СБП" className="h-6 w-auto object-contain" loading="lazy" />
                 </div>
               </div>
             </div>

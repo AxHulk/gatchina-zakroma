@@ -1,4 +1,4 @@
-import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, inArray, gt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, products, cartItems, contactRequests, orders, orderItems, InsertProduct, InsertContactRequest, InsertCartItem, InsertOrder, InsertOrderItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -92,11 +92,14 @@ export async function getUserByOpenId(openId: string) {
 
 // ============ PRODUCT FUNCTIONS ============
 
+// All product queries filter by quantity > 0 to hide out-of-stock items
 export async function getAllProducts() {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db.select().from(products).orderBy(desc(products.createdAt));
+  const result = await db.select().from(products)
+    .where(gt(products.quantity, 0))
+    .orderBy(desc(products.createdAt));
   return result;
 }
 
@@ -106,7 +109,10 @@ export async function searchProducts(query: string) {
   
   const searchTerm = `%${query}%`;
   const result = await db.select().from(products)
-    .where(sql`${products.title} LIKE ${searchTerm}`)
+    .where(and(
+      sql`${products.title} LIKE ${searchTerm}`,
+      gt(products.quantity, 0)
+    ))
     .orderBy(desc(products.createdAt));
   return result;
 }
@@ -115,7 +121,11 @@ export async function getProductsByCategory(category: string) {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db.select().from(products).where(eq(products.category, category));
+  const result = await db.select().from(products)
+    .where(and(
+      eq(products.category, category),
+      gt(products.quantity, 0)
+    ));
   return result;
 }
 
@@ -133,7 +143,7 @@ export async function getRandomProducts(limit: number = 9) {
   
   // Получаем только товары в наличии (quantity > 0)
   const result = await db.select().from(products)
-    .where(sql`${products.quantity} > 0`)
+    .where(gt(products.quantity, 0))
     .orderBy(sql`RAND()`)
     .limit(limit);
   return result;
@@ -143,12 +153,13 @@ export async function getSimilarProducts(productId: number, category: string, li
   const db = await getDb();
   if (!db) return [];
   
-  // Get products from the same category, excluding the current product
+  // Get products from the same category, excluding the current product, only in stock
   const result = await db.select()
     .from(products)
     .where(and(
       eq(products.category, category),
-      sql`${products.id} != ${productId}`
+      sql`${products.id} != ${productId}`,
+      gt(products.quantity, 0)
     ))
     .orderBy(sql`RAND()`)
     .limit(limit);
@@ -160,7 +171,10 @@ export async function getProductCategories() {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db.selectDistinct({ category: products.category }).from(products);
+  // Only return categories that have in-stock products
+  const result = await db.selectDistinct({ category: products.category })
+    .from(products)
+    .where(gt(products.quantity, 0));
   return result.map(r => r.category);
 }
 

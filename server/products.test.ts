@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -7,11 +7,12 @@ function createPublicContext(): TrpcContext {
     user: null,
     req: {
       protocol: "https",
-      headers: {},
+      headers: { cookie: "cart_session=test_session_vitest" },
     } as TrpcContext["req"],
     res: {
-      clearCookie: () => {},
-    } as TrpcContext["res"],
+      setHeader: vi.fn(),
+      clearCookie: vi.fn(),
+    } as unknown as TrpcContext["res"],
   };
 }
 
@@ -70,6 +71,22 @@ describe("products.list", () => {
       }
     }
   });
+
+  it("returns only in-stock products (quantity > 0)", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.list({});
+
+    expect(Array.isArray(result)).toBe(true);
+    // Every product must have quantity > 0
+    const outOfStock = result.filter((p) => p.quantity <= 0);
+    expect(outOfStock).toHaveLength(0);
+    // All products should be in stock
+    result.forEach((product) => {
+      expect(product.quantity).toBeGreaterThan(0);
+    });
+  });
 });
 
 describe("products.random", () => {
@@ -81,6 +98,34 @@ describe("products.random", () => {
 
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeLessThanOrEqual(5);
+  });
+
+  it("returns only in-stock random products", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.random({ limit: 9 });
+
+    expect(Array.isArray(result)).toBe(true);
+    result.forEach((product) => {
+      expect(product.quantity).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("products.categories", () => {
+  it("returns categories list with non-empty strings", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.products.categories();
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    result.forEach((cat) => {
+      expect(typeof cat).toBe("string");
+      expect(cat.length).toBeGreaterThan(0);
+    });
   });
 });
 

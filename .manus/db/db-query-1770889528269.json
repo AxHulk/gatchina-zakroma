@@ -1,0 +1,15 @@
+{
+  "query": "SELECT MIN(quantity) as min_qty, MAX(quantity) as max_qty, COUNT(*) as total FROM products;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2hZTkvnhWtkwpNu.7428adf1c145 --database Nt79emaCaXWand8b7iQ2sX --execute SELECT MIN(quantity) as min_qty, MAX(quantity) as max_qty, COUNT(*) as total FROM products;",
+  "rows": [
+    {
+      "min_qty": "5",
+      "max_qty": "50",
+      "total": "104"
+    }
+  ],
+  "messages": [],
+  "stdout": "min_qty\tmax_qty\ttotal\n5\t50\t104\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

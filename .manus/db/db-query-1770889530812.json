@@ -1,0 +1,34 @@
+{
+  "query": "SELECT quantity, COUNT(*) as cnt FROM products GROUP BY quantity ORDER BY quantity ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2hZTkvnhWtkwpNu.7428adf1c145 --database Nt79emaCaXWand8b7iQ2sX --execute SELECT quantity, COUNT(*) as cnt FROM products GROUP BY quantity ORDER BY quantity ASC;",
+  "rows": [
+    {
+      "quantity": "5",
+      "cnt": "18"
+    },
+    {
+      "quantity": "7",
+      "cnt": "1"
+    },
+    {
+      "quantity": "9",
+      "cnt": "1"
+    },
+    {
+      "quantity": "10",
+      "cnt": "81"
+    },
+    {
+      "quantity": "20",
+      "cnt": "2"
+    },
+    {
+      "quantity": "50",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "quantity\tcnt\n5\t18\n7\t1\n9\t1\n10\t81\n20\t2\n50\t1\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

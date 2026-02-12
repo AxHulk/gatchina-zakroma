@@ -1,0 +1,160 @@
+{
+  "query": "SELECT id, title, quantity FROM products ORDER BY quantity ASC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2hZTkvnhWtkwpNu.7428adf1c145 --database Nt79emaCaXWand8b7iQ2sX --execute SELECT id, title, quantity FROM products ORDER BY quantity ASC LIMIT 30;",
+  "rows": [
+    {
+      "id": "121",
+      "title": "Малина сушеная",
+      "quantity": "5"
+    },
+    {
+      "id": "61",
+      "title": "Мята",
+      "quantity": "5"
+    },
+    {
+      "id": "16",
+      "title": "Брокколи",
+      "quantity": "5"
+    },
+    {
+      "id": "119",
+      "title": "Фруктовые чипсы Цитрусовый микс",
+      "quantity": "5"
+    },
+    {
+      "id": "100",
+      "title": "Перец острый зеленый",
+      "quantity": "5"
+    },
+    {
+      "id": "64",
+      "title": "Финики Меджул",
+      "quantity": "5"
+    },
+    {
+      "id": "37",
+      "title": "Тыквенные семечки очищенные",
+      "quantity": "5"
+    },
+    {
+      "id": "25",
+      "title": "Петрушка",
+      "quantity": "5"
+    },
+    {
+      "id": "22",
+      "title": "Изюм светлый",
+      "quantity": "5"
+    },
+    {
+      "id": "110",
+      "title": "Облепиха",
+      "quantity": "5"
+    },
+    {
+      "id": "10",
+      "title": "Чеснок молодой",
+      "quantity": "5"
+    },
+    {
+      "id": "58",
+      "title": "Базилик зеленый",
+      "quantity": "5"
+    },
+    {
+      "id": "18",
+      "title": "Мангольд",
+      "quantity": "5"
+    },
+    {
+      "id": "8",
+      "title": "Шпинат",
+      "quantity": "5"
+    },
+    {
+      "id": "124",
+      "title": "Калина сушеная",
+      "quantity": "5"
+    },
+    {
+      "id": "108",
+      "title": "Шиповник сушеный",
+      "quantity": "5"
+    },
+    {
+      "id": "20",
+      "title": "Кинза",
+      "quantity": "5"
+    },
+    {
+      "id": "109",
+      "title": "Спаржа зеленая тонкая",
+      "quantity": "5"
+    },
+    {
+      "id": "32",
+      "title": "Лук зеленый с корешками",
+      "quantity": "7"
+    },
+    {
+      "id": "21",
+      "title": "Клубника Крымская",
+      "quantity": "9"
+    },
+    {
+      "id": "12",
+      "title": "Огурцы корнишоны",
+      "quantity": "10"
+    },
+    {
+      "id": "19",
+      "title": "Перец красный",
+      "quantity": "10"
+    },
+    {
+      "id": "24",
+      "title": "Авокадо Хасс",
+      "quantity": "10"
+    },
+    {
+      "id": "17",
+      "title": "Помидоры Мадрид",
+      "quantity": "10"
+    },
+    {
+      "id": "11",
+      "title": "Картофель Ред скарлет",
+      "quantity": "10"
+    },
+    {
+      "id": "2",
+      "title": "Помидоры розовые",
+      "quantity": "10"
+    },
+    {
+      "id": "23",
+      "title": "Морковь",
+      "quantity": "10"
+    },
+    {
+      "id": "5",
+      "title": "Картофель молодой",
+      "quantity": "10"
+    },
+    {
+      "id": "9",
+      "title": "Помидоры розовые Бычье сердце",
+      "quantity": "10"
+    },
+    {
+      "id": "4",
+      "title": "Салат Айсберг",
+      "quantity": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tquantity\n121\tМалина сушеная\t5\n61\tМята\t5\n16\tБрокколи\t5\n119\tФруктовые чипсы Цитрусовый микс\t5\n100\tПерец острый зеленый\t5\n64\tФиники Меджул\t5\n37\tТыквенные семечки очищенные\t5\n25\tПетрушка\t5\n22\tИзюм светлый\t5\n110\tОблепиха\t5\n10\tЧеснок молодой\t5\n58\tБазилик зеленый\t5\n18\tМангольд\t5\n8\tШпинат\t5\n124\tКалина сушеная\t5\n108\tШиповник сушеный\t5\n20\tКинза\t5\n109\tСпаржа зеленая тонкая\t5\n32\tЛук зеленый с корешками\t7\n21\tКлубника Крымская\t9\n12\tОгурцы корнишоны\t10\n19\tПерец красный\t10\n24\tАвокадо Хасс\t10\n17\tПомидоры Мадрид\t10\n11\tКартофель Ред скарлет\t10\n2\tПомидоры розовые\t10\n23\tМорковь\t10\n5\tКартофель молодой\t10\n9\tПомидоры розовые Бычье сердце\t10\n4\tСалат Айсберг\t10\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
