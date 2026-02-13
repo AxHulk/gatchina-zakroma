@@ -23,6 +23,7 @@ import {
   getOrdersBySession
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { sendOrderEmails } from "./mailer";
 
 // Helper to get or create session ID from cookies
 function getSessionId(ctx: { req: any; res: any }): string {
@@ -240,6 +241,35 @@ export const appRouter = router({
         await notifyOwner({
           title: `Новый заказ ${order.orderNumber}`,
           content: `Заказ: ${order.orderNumber}\n\nКлиент:\nИмя: ${input.customerName}\nEmail: ${input.customerEmail}\nТелефон: ${input.customerPhone}\n\nДоставка: ${deliveryMethodText}${input.deliveryAddress ? `\nАдрес: ${input.deliveryAddress}` : ''}${input.deliveryCity ? `, ${input.deliveryCity}` : ''}${input.deliveryComment ? `\nКомментарий: ${input.deliveryComment}` : ''}\n\nОплата: ${paymentMethodText}\n\nТовары:\n${itemsList}\n\nПодитог: ${((order.subtotal ?? 0) / 100).toFixed(2)} ₽\nДоставка: ${((order.deliveryFee ?? 0) / 100).toFixed(2)} ₽\nИТОГО: ${((order.total ?? 0) / 100).toFixed(2)} ₽`,
+        });
+        
+        // Send email notifications (non-blocking)
+        const emailData = {
+          orderNumber: order.orderNumber,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          deliveryMethod: input.deliveryMethod,
+          deliveryAddress: input.deliveryAddress,
+          deliveryCity: input.deliveryCity,
+          deliveryComment: input.deliveryComment,
+          paymentMethod: input.paymentMethod,
+          items: order.items.map(item => ({
+            productTitle: item.productTitle,
+            quantity: item.quantity,
+            unit: item.unit ?? null,
+            price: item.price,
+            subtotal: item.subtotal,
+          })),
+          subtotal: order.subtotal ?? 0,
+          deliveryFee: order.deliveryFee ?? 0,
+          total: order.total ?? 0,
+        };
+        
+        sendOrderEmails(emailData).then(result => {
+          console.log(`[Orders] Email results for ${order.orderNumber}: customer=${result.customer}, manager=${result.manager}`);
+        }).catch(err => {
+          console.error(`[Orders] Email sending failed for ${order.orderNumber}:`, err);
         });
         
         return { 
