@@ -300,7 +300,7 @@ export interface CreateOrderInput {
   deliveryAddress?: string;
   deliveryCity?: string;
   deliveryComment?: string;
-  paymentMethod: "cash" | "card" | "invoice";
+  paymentMethod: "cash" | "card" | "invoice" | "online";
 }
 
 export async function createOrder(input: CreateOrderInput) {

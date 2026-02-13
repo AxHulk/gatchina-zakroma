@@ -1,8 +1,177 @@
 import { Router, Request, Response } from "express";
-import { confirmOrderPayment, failOrderPayment, getOrderByNumber, getOrderByPaymentId } from "./db";
+import { confirmOrderPayment, failOrderPayment, getOrderByNumber, getOrderByPaymentId, updateOrderPayment } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { verifyPaymoCallbackSignature } from "./paymo";
+import { sendOrderEmails } from "./mailer";
 
 const router = Router();
+
+/**
+ * Paymo Start Callback
+ * URL: /api/payment/paymo/start
+ * 
+ * Called by Paymo BEFORE creating and processing the transaction.
+ * Must return {"result": true} to allow the payment to proceed.
+ */
+router.post("/paymo/start", async (req: Request, res: Response) => {
+  try {
+    console.log("[Paymo Start] Received:", JSON.stringify(req.body));
+    
+    const { tx_id, user, signature, test_payment, extra } = req.body;
+    
+    const orderNumber = extra?.orderNumber || tx_id;
+    
+    if (!orderNumber) {
+      console.error("[Paymo Start] Missing order number");
+      return res.json({ result: false, error: "Missing order number" });
+    }
+    
+    // Check that order exists
+    const order = await getOrderByNumber(orderNumber);
+    if (!order) {
+      console.error(`[Paymo Start] Order ${orderNumber} not found`);
+      return res.json({ result: false, error: "Order not found" });
+    }
+    
+    // Update payment status to processing
+    await updateOrderPayment({
+      orderNumber,
+      paymentStatus: "processing",
+      paymentProvider: "paymo",
+    });
+    
+    console.log(`[Paymo Start] Order ${orderNumber} - payment started`);
+    
+    // Must return {"result": true} to allow payment
+    res.json({ result: true });
+  } catch (error) {
+    console.error("[Paymo Start] Error:", error);
+    // Return true anyway to not block the payment
+    res.json({ result: true });
+  }
+});
+
+/**
+ * Paymo Finish Callback
+ * URL: /api/payment/paymo/finish
+ * 
+ * Called by Paymo AFTER the transaction is completed.
+ * Must return {"result": true} to confirm receipt.
+ * If response is not {"result": true}, Paymo will retry 5 times
+ * at 5, 10, 20, 40, 60 minutes intervals.
+ */
+router.post("/paymo/finish", async (req: Request, res: Response) => {
+  try {
+    console.log("[Paymo Finish] Received:", JSON.stringify(req.body));
+    
+    const {
+      tx_id,
+      user,
+      signature,
+      status,
+      result,
+      payment_id,
+      payment_time,
+      base_amount,
+      pan_mask,
+      is_rebill,
+      test_payment,
+      error_code,
+      extra,
+    } = req.body;
+    
+    const orderNumber = extra?.orderNumber || tx_id;
+    
+    if (!orderNumber) {
+      console.error("[Paymo Finish] Missing order number");
+      return res.json({ result: true });
+    }
+    
+    // Verify signature if provided
+    if (signature && base_amount) {
+      const isValid = verifyPaymoCallbackSignature(tx_id, parseInt(base_amount), signature);
+      if (!isValid) {
+        console.warn(`[Paymo Finish] Invalid signature for order ${orderNumber}, proceeding anyway`);
+      }
+    }
+    
+    if (status === "deposited" && result === true) {
+      // Payment successful
+      const order = await confirmOrderPayment(orderNumber, payment_id?.toString() || tx_id);
+      
+      if (order) {
+        // Update additional payment info
+        await updateOrderPayment({
+          orderNumber,
+          paymentProvider: "paymo",
+          paymentId: payment_id?.toString() || tx_id,
+          paymentStatus: "paid",
+          paidAt: new Date(),
+        });
+        
+        // Notify owner about successful payment
+        notifyOwner({
+          title: `Оплата получена: ${orderNumber}`,
+          content: `Заказ ${orderNumber} оплачен через Paymo.\n\nСумма: ${(order.total / 100).toFixed(2)} руб.\nКлиент: ${order.customerName}\nТелефон: ${order.customerPhone}${pan_mask ? `\nКарта: ${pan_mask}` : ""}${test_payment ? "\n\n(ТЕСТОВЫЙ ПЛАТЕЖ)" : ""}`,
+        }).catch(err => {
+          console.error("[Paymo Finish] Failed to notify owner:", err.message);
+        });
+        
+        // Send payment confirmation emails
+        const emailData = {
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          customerEmail: order.customerEmail,
+          customerPhone: order.customerPhone,
+          deliveryMethod: order.deliveryMethod as "pickup" | "delivery",
+          deliveryAddress: order.deliveryAddress || undefined,
+          deliveryCity: order.deliveryCity || undefined,
+          deliveryComment: order.deliveryComment || undefined,
+          paymentMethod: "online" as const,
+          items: order.items?.map((item: any) => ({
+            productTitle: item.productTitle,
+            quantity: item.quantity,
+            unit: item.unit ?? null,
+            price: item.price,
+            subtotal: item.subtotal,
+          })) || [],
+          subtotal: order.subtotal ?? 0,
+          deliveryFee: order.deliveryFee ?? 0,
+          total: order.total ?? 0,
+        };
+        
+        sendOrderEmails(emailData).then(emailResult => {
+          console.log(`[Paymo Finish] Email results for ${orderNumber}: customer=${emailResult.customer}, manager=${emailResult.manager}`);
+        }).catch(err => {
+          console.error(`[Paymo Finish] Email sending failed for ${orderNumber}:`, err);
+        });
+        
+        console.log(`[Paymo Finish] Order ${orderNumber} payment confirmed (payment_id: ${payment_id})`);
+      } else {
+        console.error(`[Paymo Finish] Order ${orderNumber} not found in database`);
+      }
+    } else if (status === "declined" || result === false) {
+      // Payment failed
+      await failOrderPayment(orderNumber, payment_id?.toString());
+      console.log(`[Paymo Finish] Order ${orderNumber} payment declined${error_code ? ` (error: ${error_code})` : ""}`);
+    } else {
+      // Other status (processing, wait_external, etc.)
+      await updateOrderPayment({
+        orderNumber,
+        paymentStatus: "processing",
+        paymentProvider: "paymo",
+        paymentId: payment_id?.toString(),
+      });
+      console.log(`[Paymo Finish] Order ${orderNumber} status: ${status}`);
+    }
+    
+    // Must return {"result": true}
+    res.json({ result: true });
+  } catch (error) {
+    console.error("[Paymo Finish] Error:", error);
+    res.json({ result: true });
+  }
+});
 
 /**
  * Webhook endpoint for Paymaster payment notifications

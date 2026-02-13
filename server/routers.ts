@@ -24,6 +24,8 @@ import {
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { sendOrderEmails } from "./mailer";
+import { buildPaymoFormData, getPaymoCheckoutUrl } from "./paymo";
+import { updateOrderPayment } from "./db";
 
 // Helper to get or create session ID from cookies
 function getSessionId(ctx: { req: any; res: any }): string {
@@ -211,7 +213,7 @@ export const appRouter = router({
         deliveryAddress: z.string().optional(),
         deliveryCity: z.string().optional(),
         deliveryComment: z.string().optional(),
-        paymentMethod: z.enum(['cash', 'card', 'invoice']),
+        paymentMethod: z.enum(['cash', 'card', 'invoice', 'online']),
       }))
       .mutation(async ({ ctx, input }) => {
         const sessionId = getSessionId(ctx);
@@ -235,6 +237,7 @@ export const appRouter = router({
           cash: 'Наличными при получении',
           card: 'Картой при получении',
           invoice: 'Безналичный расчет',
+          online: 'Онлайн-оплата (Paymo)',
         }[input.paymentMethod];
         
         // Notify owner about new order (optional, non-blocking)
@@ -274,10 +277,41 @@ export const appRouter = router({
           console.error(`[Orders] Email sending failed for ${order.orderNumber}:`, err);
         });
         
+        // If online payment, generate Paymo payment data
+        if (input.paymentMethod === 'online') {
+          const baseUrl = `https://${ctx.req.headers.host || 'gzakroma.ru'}`;
+          const paymoFormData = buildPaymoFormData({
+            orderNumber: order.orderNumber,
+            amountKopecks: order.total ?? 0,
+            description: `Заказ ${order.orderNumber} - Гатчинские закрома`,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            successUrl: `${baseUrl}/payment-success/${order.orderNumber}`,
+            failUrl: `${baseUrl}/payment-failed/${order.orderNumber}`,
+          });
+          
+          // Update order with payment provider info
+          await updateOrderPayment({
+            orderNumber: order.orderNumber,
+            paymentProvider: 'paymo',
+            paymentStatus: 'pending',
+          });
+          
+          return { 
+            success: true, 
+            orderNumber: order.orderNumber,
+            total: order.total,
+            paymentUrl: getPaymoCheckoutUrl(),
+            paymentFormData: paymoFormData,
+          };
+        }
+        
         return { 
           success: true, 
           orderNumber: order.orderNumber,
           total: order.total,
+          paymentUrl: null,
+          paymentFormData: null,
         };
       }),
     

@@ -8,9 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Truck, MapPin, CreditCard, Banknote, FileText, ShoppingBag, Loader2 } from "lucide-react";
+import { ArrowLeft, Truck, MapPin, CreditCard, Banknote, FileText, ShoppingBag, Loader2, Globe } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -27,13 +27,35 @@ export default function Checkout() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryComment, setDeliveryComment] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice" | "online">("cash");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   
   const createOrderMutation = trpc.orders.create.useMutation({
     onSuccess: (data) => {
-      toast.success("Заказ успешно оформлен!");
-      setLocation(`/order-success/${data.orderNumber}`);
+      if (data.paymentUrl && data.paymentFormData) {
+        // Online payment - submit hidden form to Paymo
+        toast.success("Перенаправляем на страницу оплаты...");
+        
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.paymentUrl;
+        form.target = "_self";
+        
+        Object.entries(data.paymentFormData).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        // Regular payment - redirect to success page
+        toast.success("Заказ успешно оформлен!");
+        setLocation(`/order-success/${data.orderNumber}`);
+      }
     },
     onError: (error) => {
       toast.error(error.message || "Ошибка при оформлении заказа");
@@ -268,9 +290,20 @@ export default function Checkout() {
                 <CardContent>
                   <RadioGroup
                     value={paymentMethod}
-                    onValueChange={(value) => setPaymentMethod(value as "cash" | "card" | "invoice")}
+                    onValueChange={(value) => setPaymentMethod(value as "cash" | "card" | "invoice" | "online")}
                     className="space-y-3"
                   >
+                    <div className="flex items-center space-x-3 p-4 border-2 border-primary/50 rounded-lg bg-primary/5 hover:border-primary transition-colors cursor-pointer">
+                      <RadioGroupItem value="online" id="online" />
+                      <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Globe className="h-5 w-5 text-primary" />
+                        <div>
+                          <span className="font-medium">Оплата онлайн</span>
+                          <p className="text-xs text-muted-foreground font-normal mt-0.5">Банковской картой через безопасный платежный шлюз</p>
+                        </div>
+                      </Label>
+                    </div>
+                    
                     <div className="flex items-center space-x-3 p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                       <RadioGroupItem value="cash" id="cash" />
                       <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-1">
@@ -374,6 +407,11 @@ export default function Checkout() {
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Оформление...
+                      </>
+                    ) : paymentMethod === "online" ? (
+                      <>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Оформить и оплатить онлайн
                       </>
                     ) : (
                       "Оформить заказ"
