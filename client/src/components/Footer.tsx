@@ -15,13 +15,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="lg:col-span-1">
-            <Link href="/" className="inline-block mb-4">
+            <Link href="/" className="flex items-center gap-3 mb-4">
               <img 
-                src="/logo.png" 
+                src="/logo-footer.png" 
                 alt="Гатчинские закрома" 
                 className="h-16 w-auto"
-                style={{ filter: 'brightness(0) invert(1)' }}
               />
+              <span className="text-xl font-bold leading-tight">Гатчинские<br/>закрома</span>
             </Link>
             <p className="text-sm text-primary-foreground/80 leading-relaxed">
               Доставка и выкуп натуральной сельхозпродукции по всему Санкт-Петербургу и Ленинградской области.

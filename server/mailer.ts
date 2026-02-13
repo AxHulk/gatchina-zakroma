@@ -1,36 +1,4 @@
-import nodemailer from "nodemailer";
-import { ENV } from "./_core/env";
-
-// Create reusable transporter
-function createTransporter() {
-  if (!ENV.smtpHost || !ENV.smtpUser || !ENV.smtpPass) {
-    console.warn("[Mailer] SMTP not configured, emails will not be sent");
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host: ENV.smtpHost,
-    port: ENV.smtpPort,
-    secure: false, // port 587 with STARTTLS
-    requireTLS: true,
-    auth: {
-      user: ENV.smtpUser,
-      pass: ENV.smtpPass,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-}
-
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter() {
-  if (!transporter) {
-    transporter = createTransporter();
-  }
-  return transporter;
-}
+import { sendEmailNotification } from "./email";
 
 export interface OrderEmailData {
   orderNumber: string;
@@ -252,59 +220,28 @@ function buildManagerEmailHtml(data: OrderEmailData): string {
 }
 
 /**
- * Send order confirmation email to customer
+ * Send order confirmation email to customer (using noreply account)
  */
 export async function sendCustomerOrderEmail(data: OrderEmailData): Promise<boolean> {
-  const transport = getTransporter();
-  if (!transport) {
-    console.warn("[Mailer] Transporter not configured, skipping customer email");
-    return false;
-  }
-
-  try {
-    await transport.sendMail({
-      from: `"Гатчинские закрома" <${ENV.smtpFrom}>`,
-      to: data.customerEmail,
-      subject: `Заказ ${data.orderNumber} — Гатчинские закрома`,
-      html: buildCustomerEmailHtml(data),
-    });
-    console.log(`[Mailer] Customer email sent to ${data.customerEmail} for order ${data.orderNumber}`);
-    return true;
-  } catch (error) {
-    console.error("[Mailer] Failed to send customer email:", error);
-    return false;
-  }
+  return await sendEmailNotification({
+    title: `Заказ ${data.orderNumber} — Гатчинские закрома`,
+    content: `Ваш заказ ${data.orderNumber} успешно оформлен`,
+    to: data.customerEmail,
+    html: buildCustomerEmailHtml(data),
+    useSalesAccount: false, // От noreply к клиенту
+  });
 }
 
 /**
- * Send order notification email to manager
+ * Send order notification email to manager (using sales account)
  */
 export async function sendManagerOrderEmail(data: OrderEmailData): Promise<boolean> {
-  const transport = getTransporter();
-  if (!transport) {
-    console.warn("[Mailer] Transporter not configured, skipping manager email");
-    return false;
-  }
-
-  const managerEmail = ENV.managerEmail;
-  if (!managerEmail) {
-    console.warn("[Mailer] Manager email not configured");
-    return false;
-  }
-
-  try {
-    await transport.sendMail({
-      from: `"Гатчинские закрома" <${ENV.smtpFrom}>`,
-      to: managerEmail,
-      subject: `🛒 Новый заказ ${data.orderNumber} — ${data.customerName}`,
-      html: buildManagerEmailHtml(data),
-    });
-    console.log(`[Mailer] Manager email sent to ${managerEmail} for order ${data.orderNumber}`);
-    return true;
-  } catch (error) {
-    console.error("[Mailer] Failed to send manager email:", error);
-    return false;
-  }
+  return await sendEmailNotification({
+    title: `🛒 Новый заказ ${data.orderNumber} — ${data.customerName}`,
+    content: `Новый заказ от ${data.customerName}`,
+    html: buildManagerEmailHtml(data),
+    useSalesAccount: true, // От sales к sales
+  });
 }
 
 /**

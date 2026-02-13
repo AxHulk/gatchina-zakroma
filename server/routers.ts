@@ -237,10 +237,12 @@ export const appRouter = router({
           invoice: 'Безналичный расчет',
         }[input.paymentMethod];
         
-        // Notify owner about new order
-        await notifyOwner({
+        // Notify owner about new order (optional, non-blocking)
+        notifyOwner({
           title: `Новый заказ ${order.orderNumber}`,
           content: `Заказ: ${order.orderNumber}\n\nКлиент:\nИмя: ${input.customerName}\nEmail: ${input.customerEmail}\nТелефон: ${input.customerPhone}\n\nДоставка: ${deliveryMethodText}${input.deliveryAddress ? `\nАдрес: ${input.deliveryAddress}` : ''}${input.deliveryCity ? `, ${input.deliveryCity}` : ''}${input.deliveryComment ? `\nКомментарий: ${input.deliveryComment}` : ''}\n\nОплата: ${paymentMethodText}\n\nТовары:\n${itemsList}\n\nПодитог: ${((order.subtotal ?? 0) / 100).toFixed(2)} ₽\nДоставка: ${((order.deliveryFee ?? 0) / 100).toFixed(2)} ₽\nИТОГО: ${((order.total ?? 0) / 100).toFixed(2)} ₽`,
+        }).catch(err => {
+          console.error('[Orders] Failed to notify owner:', err.message);
         });
         
         // Send email notifications (non-blocking)
