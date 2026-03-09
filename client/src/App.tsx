@@ -22,6 +22,13 @@ import PaymentPending from "./pages/PaymentPending";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import Delivery from "./pages/Delivery";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogs from "./pages/AdminLogs";
+import AdminOrders from "./pages/AdminOrders";
+import AdminPayments from "./pages/AdminPayments";
+import AdminContacts from "./pages/AdminContacts";
+import { useLocation } from "wouter";
 
 function Router() {
   return (
@@ -42,9 +49,31 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/offer" component={Offer} />
       <Route path="/returns" component={Returns} />
+      {/* Admin routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/logs" component={AdminLogs} />
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/payments" component={AdminPayments} />
+      <Route path="/admin/contacts" component={AdminContacts} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+  );
+}
+
+function AppContent() {
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {!isAdmin && <Header />}
+      <main className="flex-1">
+        <Router />
+      </main>
+      {!isAdmin && <Footer />}
+    </div>
   );
 }
 
@@ -54,13 +83,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-              <Router />
-            </main>
-            <Footer />
-          </div>
+          <AppContent />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

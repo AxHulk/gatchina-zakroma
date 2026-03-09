@@ -9,6 +9,8 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import paymentWebhooks from "../payment-webhooks";
 import catalogApi from "../catalog-api";
+import adminApi from "../admin-api";
+import { requestLoggerMiddleware } from "../request-logger";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,8 +37,12 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Request logger middleware — logs all API requests (non-blocking, fire-and-forget)
+  app.use(requestLoggerMiddleware);
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  // Admin panel API under /api/admin
+  app.use("/api/admin", adminApi);
   // Payment webhooks under /api/payment
   app.use("/api/payment", paymentWebhooks);
   // Catalog API under /api/catalog

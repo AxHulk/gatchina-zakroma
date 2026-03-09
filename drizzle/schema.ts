@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -129,3 +129,26 @@ export const orderItems = mysqlTable("order_items", {
 
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+/**
+ * Request logs table for admin panel - logs all incoming requests and callbacks
+ */
+export const requestLogs = mysqlTable("request_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  method: varchar("method", { length: 10 }).notNull(),
+  url: varchar("url", { length: 2048 }).notNull(),
+  path: varchar("path", { length: 512 }).notNull(),
+  statusCode: int("statusCode"),
+  requestHeaders: text("requestHeaders"),
+  requestBody: text("requestBody"),
+  responseBody: text("responseBody"),
+  ip: varchar("ip", { length: 64 }),
+  userAgent: varchar("userAgent", { length: 512 }),
+  source: varchar("source", { length: 64 }).notNull().default("general"),
+  duration: int("duration"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RequestLog = typeof requestLogs.$inferSelect;
+export type InsertRequestLog = typeof requestLogs.$inferInsert;
