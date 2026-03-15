@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
@@ -6,6 +7,7 @@ import { toast } from "sonner";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 
 export default function Cart() {
+  useSeoMeta({ title: "Корзина", description: "Ваша корзина в интернет-магазине «Гатчинские закрома». Проверьте свой заказ и перейдите к оформлению." });
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const { data: cartItems = [], isLoading } = trpc.cart.get.useQuery();

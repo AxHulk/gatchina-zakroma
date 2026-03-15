@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Users, Shield, Truck, Leaf, Ban, Check, Clock, Package, MapPin } from "lucide-react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 const whatWeDo = [
   {
@@ -49,6 +50,7 @@ const whatToKnow = [
 ];
 
 export default function About() {
+  useSeoMeta({ title: "О компании", description: "«Гатчинские закрома» — мы объединяем фермеров, сборщиков и конечных потребителей. Контролируем качество продукции от поля до прилавка. Узнайте больше о нашей миссии и ценностях." });
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

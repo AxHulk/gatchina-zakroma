@@ -1,7 +1,9 @@
 import { Link } from "wouter";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { ArrowLeft } from "lucide-react";
 
 export default function Privacy() {
+  useSeoMeta({ title: "Политика конфиденциальности", description: "Политика конфиденциальности и обработки персональных данных интернет-магазина «Гатчинские закрома». Мы заботимся о безопасности ваших данных." });
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-8">

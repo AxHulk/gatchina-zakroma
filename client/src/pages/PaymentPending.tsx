@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Clock, CreditCard, ArrowLeft, RefreshCw } from "lucide-react";
 import Header from "@/components/Header";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 
 export default function PaymentPending() {
+  useSeoMeta({ title: "Ожидание оплаты", description: "Ваш заказ ожидает подтверждения оплаты. Мы сообщим вам, как только оплата будет завершена." });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   const [pollCount, setPollCount] = useState(0);

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import ContactForm from "@/components/ContactForm";
 import { Wallet, Shield, Eye, CheckCircle2, Clock, MapPin, Phone } from "lucide-react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 const benefits = [
   {
@@ -51,6 +52,7 @@ const acceptanceRequirements = [
 ];
 
 export default function Buyback() {
+  useSeoMeta({ title: "Скупка продукции", description: "Скупаем излишки урожая у фермеров и частных лиц в Ленинградской области. Предлагаем выгодные цены и быстрый расчет. Сдайте свою продукцию нам!" });
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

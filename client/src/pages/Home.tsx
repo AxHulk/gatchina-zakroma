@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import ProductCard from "@/components/ProductCard";
 import ContactForm from "@/components/ContactForm";
 import { ArrowRight, Leaf, Apple, Cherry, Carrot, Salad, Nut } from "lucide-react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 const categories = [
   { name: "Ягоды", icon: Cherry, color: "bg-red-100 text-red-600", filter: "Ягоды" },
@@ -15,6 +16,7 @@ const categories = [
 ];
 
 export default function Home() {
+  useSeoMeta({ title: "Главная" });
   const { data: randomProducts = [], isLoading } = trpc.products.random.useQuery({ limit: 9 });
 
   return (

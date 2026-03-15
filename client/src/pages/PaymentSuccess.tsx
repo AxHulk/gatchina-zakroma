@@ -5,9 +5,11 @@ import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { CheckCircle, Package, Truck, MapPin, Phone, Mail, ArrowLeft, Loader2, ShoppingBag, CreditCard } from "lucide-react";
 import Header from "@/components/Header";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Footer from "@/components/Footer";
 
 export default function PaymentSuccess() {
+  useSeoMeta({ title: "Оплата прошла успешно", description: "Ваш заказ успешно оплачен. Спасибо за покупку в интернет-магазине «Гатчинские закрома»!" });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   

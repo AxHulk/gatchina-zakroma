@@ -12,9 +12,11 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, CreditCard, Banknote, FileText, ShoppingBag, Loader2, Globe } from "lucide-react";
 import Header from "@/components/Header";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Footer from "@/components/Footer";
 
 export default function Checkout() {
+  useSeoMeta({ title: "Оформление заказа", description: "Оформление заказа в интернет-магазине «Гатчинские закрома». Заполните контактные данные и выберите удобный способ доставки и оплаты." });
   const [, setLocation] = useLocation();
   
   const { data: cartItems, isLoading: cartLoading } = trpc.cart.get.useQuery();

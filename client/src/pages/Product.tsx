@@ -9,6 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import ContactForm from "@/components/ContactForm";
 import ProductCard from "@/components/ProductCard";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 export default function Product() {
   const params = useParams<{ id: string }>();
@@ -18,10 +19,15 @@ export default function Product() {
   const [quantity, setQuantity] = useState(1);
   const [showQuickBuy, setShowQuickBuy] = useState(false);
   
-  const { data: product, isLoading, error } = trpc.products.getById.useQuery(
+    const { data: product, isLoading, error } = trpc.products.getById.useQuery(
     { id: productId },
     { enabled: productId > 0 }
   );
+
+  useSeoMeta({
+    title: product ? product.title : "Загрузка...",
+    description: product ? `Купить ${product.title.toLowerCase()} в интернет-магазине «Гатчинские закрома». ${product.description || "Свежие фермерские продукты с доставкой."}` : undefined,
+  });
   
   const { data: similarProducts } = trpc.products.similar.useQuery(
     { productId, category: product?.category || "", limit: 4 },

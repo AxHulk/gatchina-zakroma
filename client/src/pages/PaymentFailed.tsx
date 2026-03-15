@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { XCircle, CreditCard, Phone, Mail, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import Header from "@/components/Header";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Footer from "@/components/Footer";
 
 export default function PaymentFailed() {
+  useSeoMeta({ title: "Ошибка оплаты", description: "Произошла ошибка при оплате заказа. Пожалуйста, попробуйте еще раз или свяжитесь с нами." });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   
