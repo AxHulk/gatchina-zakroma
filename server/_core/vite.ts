@@ -49,6 +49,70 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
+// SEO meta map: URL path -> { title, description }
+const seoMeta: Record<string, { title: string; description: string }> = {
+  "/": {
+    title: "Гатчинские закрома — свежие фермерские продукты с доставкой",
+    description: "Интернет-магазин фермерских продуктов в Гатчине. Свежие овощи, фрукты, молочные продукты и мясо от местных производителей. Доставка по Гатчинскому району.",
+  },
+  "/shop": {
+    title: "Каталог товаров — Гатчинские закрома",
+    description: "Купите свежие фермерские продукты с доставкой в Гатчине. Овощи, фрукты, ягоды, мясо, молочные продукты от местных производителей.",
+  },
+  "/about": {
+    title: "О нас — Гатчинские закрома",
+    description: "Гатчинские закрома — платформа для покупки фермерских продуктов напрямую у производителей Гатчинского района. Наша миссия, ценности и команда.",
+  },
+  "/delivery": {
+    title: "Доставка и оплата — Гатчинские закрома",
+    description: "Условия доставки фермерских продуктов по Гатчине и Ленинградской области. Способы оплаты: наличными, картой или онлайн.",
+  },
+  "/contacts": {
+    title: "Контакты — Гатчинские закрома",
+    description: "Свяжитесь с нами: адрес, телефон, email. Задайте вопрос или оставьте заявку на покупку фермерских продуктов.",
+  },
+  "/buyback": {
+    title: "Скупка продукции — Гатчинские закрома",
+    description: "Закупаем ягоды, грибы, овощи, фрукты и другие сельскохозяйственные продукты у населения Гатчинского района. Узнайте условия сдачи.",
+  },
+  "/cart": {
+    title: "Корзина — Гатчинские закрома",
+    description: "Ваша корзина в интернет-магазине фермерских продуктов Гатчинские закрома.",
+  },
+  "/checkout": {
+    title: "Оформление заказа — Гатчинские закрома",
+    description: "Оформите заказ фермерских продуктов: укажите адрес доставки, выберите способ оплаты и получите свежие продукты.",
+  },
+  "/returns": {
+    title: "Возврат товара — Гатчинские закрома",
+    description: "Политика возврата товаров в интернет-магазине Гатчинские закрома. Условия, сроки и порядок возврата.",
+  },
+  "/privacy": {
+    title: "Политика конфиденциальности — Гатчинские закрома",
+    description: "Политика конфиденциальности и обработка персональных данных в интернет-магазине Гатчинские закрома.",
+  },
+  "/offer": {
+    title: "Публичная оферта — Гатчинские закрома",
+    description: "Публичная оферта (договор купли-продажи) интернет-магазина Гатчинские закрома.",
+  },
+};
+
+function getSeoMeta(urlPath: string): { title: string; description: string } {
+  // Strip query string
+  const cleanPath = urlPath.split("?")[0].split("#")[0];
+  // Exact match first
+  if (seoMeta[cleanPath]) return seoMeta[cleanPath];
+  // Product page: /shop/:id
+  if (cleanPath.startsWith("/shop/")) {
+    return {
+      title: "Товар — Гатчинские закрома",
+      description: "Фермерский продукт с доставкой по Гатчине и Ленинградской области. Свежее, натуральное, от местных фермеров.",
+    };
+  }
+  // Default fallback
+  return seoMeta["/"];
+}
+
 export function serveStatic(app: Express) {
   const distPath =
     process.env.NODE_ENV === "development"
@@ -64,18 +128,27 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  // Return 404 status for non-existent routes (SEO requirement)
   app.use("*", (req, res) => {
     const requestedPath = req.originalUrl;
     const filePath = path.join(distPath, requestedPath);
-    
+
     // Check if requested file exists
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       res.sendFile(filePath);
-    } else {
-      // File doesn't exist - return index.html with 404 status
-      // React Router will show NotFound component
-      res.status(404).sendFile(path.resolve(distPath, "index.html"));
+      return;
+    }
+
+    // Inject SEO meta into index.html before sending
+    const indexPath = path.resolve(distPath, "index.html");
+    const { title, description } = getSeoMeta(requestedPath);
+    const seoBlock = `<meta name="description" content="${description}" />\n    <title>${title}</title>`;
+
+    try {
+      let html = fs.readFileSync(indexPath, "utf-8");
+      html = html.replace("<!--SEO_META-->", seoBlock);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch {
+      res.status(200).sendFile(indexPath);
     }
   });
 }
