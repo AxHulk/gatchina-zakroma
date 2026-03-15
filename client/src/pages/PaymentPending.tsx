@@ -3,13 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Clock, CreditCard, ArrowLeft, RefreshCw } from "lucide-react";
-import Header from "@/components/Header";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
-import Footer from "@/components/Footer";
+
 import { useEffect, useState } from "react";
 
 export default function PaymentPending() {
-  useSeoMeta({ title: "Ожидание оплаты", description: "Ваш заказ ожидает подтверждения оплаты. Мы сообщим вам, как только оплата будет завершена." });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   const [pollCount, setPollCount] = useState(0);
@@ -37,42 +34,31 @@ export default function PaymentPending() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
   if (!order) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-12">
-          <Card className="max-w-md mx-auto text-center p-8">
-            <CreditCard className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Заказ не найден</h2>
-            <p className="text-muted-foreground mb-6">
-              К сожалению, мы не смогли найти информацию о заказе {orderNumber}
-            </p>
-            <Link href="/shop">
-              <Button>Перейти в каталог</Button>
-            </Link>
-          </Card>
-        </main>
-        <Footer />
+      <div className="container py-12">
+        <Card className="max-w-md mx-auto text-center p-8">
+          <CreditCard className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Заказ не найден</h2>
+          <p className="text-muted-foreground mb-6">
+            К сожалению, мы не смогли найти информацию о заказе {orderNumber}
+          </p>
+          <Link href="/shop">
+            <Button>Перейти в каталог</Button>
+          </Link>
+        </Card>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1 container py-12">
+    <div className="container py-12">
         <div className="max-w-lg mx-auto">
           <Card className="text-center">
             <CardHeader>
@@ -135,9 +121,6 @@ export default function PaymentPending() {
             </CardContent>
           </Card>
         </div>
-      </main>
-      
-      <Footer />
     </div>
   );
 }

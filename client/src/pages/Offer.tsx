@@ -1,9 +1,13 @@
 import { Link } from "wouter";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { ArrowLeft } from "lucide-react";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 export default function Offer() {
-  useSeoMeta({ title: "Публичная оферта", description: "Публичная оферта на заключение договора купли-продажи товаров в интернет-магазине «Гатчинские закрома»." });
+  usePageMeta({
+    title: "Публичная оферта — Гатчинские закрома",
+    description: "Публичная оферта на покупку товаров в интернет-магазине Гатчинские закрома. Условия продажи фермерских продуктов."
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-8">

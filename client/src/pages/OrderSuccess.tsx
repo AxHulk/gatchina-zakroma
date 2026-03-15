@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { CheckCircle, Package, Truck, MapPin, Phone, Mail, ArrowLeft, Loader2, ShoppingBag } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 
 export default function OrderSuccess() {
   const params = useParams<{ orderNumber: string }>();
@@ -35,21 +34,15 @@ export default function OrderSuccess() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
   if (error || !order) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-12">
+      <div className="container py-12">
           <Card className="max-w-md mx-auto text-center p-8">
             <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">Заказ не найден</h2>
@@ -60,17 +53,12 @@ export default function OrderSuccess() {
               <Button>Перейти в каталог</Button>
             </Link>
           </Card>
-        </main>
-        <Footer />
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1 container py-12">
+    <div className="container py-12">
         <div className="max-w-3xl mx-auto">
           {/* Success header */}
           <div className="text-center mb-8">
@@ -234,9 +222,6 @@ export default function OrderSuccess() {
             </Link>
           </div>
         </div>
-      </main>
-      
-      <Footer />
     </div>
   );
 }

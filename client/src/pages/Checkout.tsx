@@ -11,12 +11,15 @@ import { trpc } from "@/lib/trpc";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, CreditCard, Banknote, FileText, ShoppingBag, Loader2, Globe } from "lucide-react";
-import Header from "@/components/Header";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
-import Footer from "@/components/Footer";
+
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function Checkout() {
-  useSeoMeta({ title: "Оформление заказа", description: "Оформление заказа в интернет-магазине «Гатчинские закрома». Заполните контактные данные и выберите удобный способ доставки и оплаты." });
+  usePageMeta({
+    title: "Оформление заказа — Гатчинские закрома",
+    description: "Оформление заказа фермерских продуктов с доставкой по Гатчинскому району. Выберите способ оплаты и доставки."
+  });
+
   const [, setLocation] = useLocation();
   
   const { data: cartItems, isLoading: cartLoading } = trpc.cart.get.useQuery();
@@ -29,7 +32,7 @@ export default function Checkout() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryComment, setDeliveryComment] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice" | "online">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice" | "online">("online");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   
   const createOrderMutation = trpc.orders.create.useMutation({
@@ -103,42 +106,32 @@ export default function Checkout() {
   
   if (cartLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
   if (!cartItems || cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-12">
-          <Card className="max-w-md mx-auto text-center p-8">
-            <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Корзина пуста</h2>
-            <p className="text-muted-foreground mb-6">
-              Добавьте товары в корзину для оформления заказа
-            </p>
-            <Link href="/shop">
-              <Button>Перейти в каталог</Button>
-            </Link>
-          </Card>
-        </main>
-        <Footer />
+      <div className="container py-12">
+        <Card className="max-w-md mx-auto text-center p-8">
+          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Корзина пуста</h2>
+          <p className="text-muted-foreground mb-6">
+            Добавьте товары в корзину для оформления заказа
+          </p>
+          <Link href="/shop">
+            <Button>Перейти в каталог</Button>
+          </Link>
+        </Card>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1 container py-8">
+    <div className="py-8">
+      <div className="container">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">Главная</Link>
@@ -380,23 +373,20 @@ export default function Checkout() {
                   </div>
                   
                   {/* Terms checkbox */}
-                  <div className="flex items-start space-x-2 pt-2">
+                  <label htmlFor="terms" className="flex items-start gap-2 pt-2 cursor-pointer select-none">
                     <Checkbox
                       id="terms"
                       checked={agreeToTerms}
                       onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+                      className="shrink-0 mt-0.5"
                     />
-                    <Label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                    <span className="text-sm text-muted-foreground leading-snug">
                       Я согласен с{" "}
-                      <Link href="/offer" className="text-primary hover:underline">
-                        условиями оферты
-                      </Link>{" "}
-                      и{" "}
-                      <Link href="/privacy" className="text-primary hover:underline">
-                        политикой конфиденциальности
-                      </Link>
-                    </Label>
-                  </div>
+                      <Link href="/offer" className="text-primary hover:underline whitespace-nowrap">условиями оферты</Link>
+                      {" "}и{" "}
+                      <Link href="/privacy" className="text-primary hover:underline whitespace-nowrap">политикой конфиденциальности</Link>
+                    </span>
+                  </label>
                   
                   {/* Submit button */}
                   <Button
@@ -432,9 +422,7 @@ export default function Checkout() {
             </div>
           </div>
         </form>
-      </main>
-      
-      <Footer />
+      </div>
     </div>
   );
 }

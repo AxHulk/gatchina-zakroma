@@ -3,12 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { XCircle, CreditCard, Phone, Mail, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
-import Header from "@/components/Header";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
-import Footer from "@/components/Footer";
+
 
 export default function PaymentFailed() {
-  useSeoMeta({ title: "Ошибка оплаты", description: "Произошла ошибка при оплате заказа. Пожалуйста, попробуйте еще раз или свяжитесь с нами." });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   
@@ -23,21 +20,14 @@ export default function PaymentFailed() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1 container py-12">
+    <div className="container py-12">
         <div className="max-w-lg mx-auto">
           <Card className="text-center">
             <CardHeader>
@@ -116,9 +106,6 @@ export default function PaymentFailed() {
             </CardContent>
           </Card>
         </div>
-      </main>
-      
-      <Footer />
     </div>
   );
 }

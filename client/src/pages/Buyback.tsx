@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import ContactForm from "@/components/ContactForm";
 import { Wallet, Shield, Eye, CheckCircle2, Clock, MapPin, Phone } from "lucide-react";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 const benefits = [
   {
     icon: Wallet,
@@ -52,7 +52,11 @@ const acceptanceRequirements = [
 ];
 
 export default function Buyback() {
-  useSeoMeta({ title: "Скупка продукции", description: "Скупаем излишки урожая у фермеров и частных лиц в Ленинградской области. Предлагаем выгодные цены и быстрый расчет. Сдайте свою продукцию нам!" });
+  usePageMeta({
+    title: "Сдать продукцию — Гатчинские закрома",
+    description: "Принимаем на реализацию фермерскую продукцию от местных производителей. Выгодные условия сотрудничества для фермеров Гатчинского района."
+  });
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

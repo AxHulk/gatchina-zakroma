@@ -7,8 +7,8 @@ import ProductCard from "@/components/ProductCard";
 import ContactForm from "@/components/ContactForm";
 import { Package, Users, Truck, Star, Search, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 const ITEMS_PER_PAGE = 12;
 
 const allCategories = [
@@ -30,7 +30,11 @@ const stats = [
 ];
 
 export default function Shop() {
-  useSeoMeta({ title: "Каталог", description: "Купить свежие фермерские продукты в интернет-магазине «Гатчинские закрома». Широкий ассортимент овощей, фруктов, ягод, грибов и орехов с доставкой по Гатчине и Ленинградской области." });
+  usePageMeta({
+    title: "Каталог продуктов — Гатчинские закрома",
+    description: "Широкий ассортимент свежих фермерских продуктов: овощи, фрукты, молоко, мясо, яйца. Натуральные продукты от местных фермеров с доставкой."
+  });
+
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const categoryFromUrl = params.get("category") || "";

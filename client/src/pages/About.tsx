@@ -2,8 +2,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Users, Shield, Truck, Leaf, Ban, Check, Clock, Package, MapPin } from "lucide-react";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 const whatWeDo = [
   {
     icon: Users,
@@ -50,7 +50,11 @@ const whatToKnow = [
 ];
 
 export default function About() {
-  useSeoMeta({ title: "О компании", description: "«Гатчинские закрома» — мы объединяем фермеров, сборщиков и конечных потребителей. Контролируем качество продукции от поля до прилавка. Узнайте больше о нашей миссии и ценностях." });
+  usePageMeta({
+    title: "О нас — Гатчинские закрома",
+    description: "Гатчинские закрома — это интернет-магазин фермерских продуктов. Мы работаем напрямую с местными производителями и гарантируем свежесть и качество."
+  });
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

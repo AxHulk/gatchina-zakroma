@@ -18,7 +18,9 @@ module.exports = {
       SMTP_SALES_FROM: "sales@gzakroma.ru",
       MANAGER_EMAIL: "sales@gzakroma.ru",
       PAYMO_API_KEY: "81e99231-3900-4235-a8a1-cd6184ceef36",
-      PAYMO_SECRET_KEY: "x4sw24asro"
+      PAYMO_SECRET_KEY: "x4sw24asro",
+      ADMIN_TOKEN: "gz-admin-2024-secret",
+      ADMIN_PASSWORD: "zakroma2024admin"
     }
   }]
 };

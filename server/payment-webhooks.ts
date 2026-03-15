@@ -17,6 +17,19 @@ router.post("/paymo/start", async (req: Request, res: Response) => {
   try {
     console.log("[Paymo Start] Received:", JSON.stringify(req.body));
     
+    // Forward callback to payin.edro.tech
+    const PAYMO_FORWARD_URL = "https://payin.edro.tech/paymo/api/v1/payments/callback";
+    try {
+      const forwardResponse = await fetch(PAYMO_FORWARD_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...req.body, callback_type: "start" }),
+      });
+      console.log(`[Paymo Start] Forwarded to payin.edro.tech, status: ${forwardResponse.status}`);
+    } catch (fwdError: any) {
+      console.error("[Paymo Start] Forward to payin.edro.tech failed:", fwdError.message);
+    }
+    
     const { tx_id, user, signature, test_payment, extra } = req.body;
     
     const orderNumber = extra?.orderNumber || tx_id;
@@ -63,6 +76,19 @@ router.post("/paymo/start", async (req: Request, res: Response) => {
 router.post("/paymo/finish", async (req: Request, res: Response) => {
   try {
     console.log("[Paymo Finish] Received:", JSON.stringify(req.body));
+    
+    // Forward callback to payin.edro.tech
+    const PAYMO_FORWARD_URL_FINISH = "https://payin.edro.tech/paymo/api/v1/payments/callback";
+    try {
+      const forwardResponse = await fetch(PAYMO_FORWARD_URL_FINISH, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...req.body, callback_type: "finish" }),
+      });
+      console.log(`[Paymo Finish] Forwarded to payin.edro.tech, status: ${forwardResponse.status}`);
+    } catch (fwdError: any) {
+      console.error("[Paymo Finish] Forward to payin.edro.tech failed:", fwdError.message);
+    }
     
     const {
       tx_id,
@@ -173,6 +199,41 @@ router.post("/paymo/finish", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Paymo Callback Proxy
+ * URL: /api/payment/paymo/callback
+ * 
+ * Direct proxy endpoint that forwards all Paymo callbacks to payin.edro.tech
+ * Use this URL in Paymo settings if you want pure forwarding without local processing.
+ */
+router.post("/paymo/callback", async (req: Request, res: Response) => {
+  const FORWARD_URL = "https://payin.edro.tech/paymo/api/v1/payments/callback";
+  try {
+    console.log("[Paymo Callback Proxy] Received:", JSON.stringify(req.body));
+    
+    const forwardResponse = await fetch(FORWARD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+    
+    const responseText = await forwardResponse.text();
+    console.log(`[Paymo Callback Proxy] Forwarded to payin.edro.tech, status: ${forwardResponse.status}, response: ${responseText}`);
+    
+    res.status(forwardResponse.status);
+    res.send(responseText);
+  } catch (error: any) {
+    console.error("[Paymo Callback Proxy] Forward failed:", error.message);
+    
+    notifyOwner({
+      title: "Ошибка проброса callback Paymo",
+      content: `Ошибка: ${error.message}\nДанные: ${JSON.stringify(req.body)}`,
+    }).catch(() => {});
+    
+    // Return success to Paymo to prevent retries
+    res.json({ result: true, warning: "Forward failed" });
+  }
+});
 /**
  * Webhook endpoint for Paymaster payment notifications
  * URL: /api/payment/paymaster/webhook

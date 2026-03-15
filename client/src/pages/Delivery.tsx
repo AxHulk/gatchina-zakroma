@@ -1,9 +1,13 @@
 import { Link } from "wouter";
 import { Truck, Clock, MapPin, Package, Leaf, ShieldCheck, Phone, ChevronRight } from "lucide-react";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 export default function Delivery() {
-  useSeoMeta({ title: "Доставка и оплата", description: "Условия доставки и оплаты в интернет-магазине «Гатчинские закрома». Быстрая и бережная доставка свежих фермерских продуктов по Гатчине и Ленинградской области. Удобные способы оплаты." });
+  usePageMeta({
+    title: "Доставка и оплата — Гатчинские закрома",
+    description: "Условия доставки фермерских продуктов по Гатчинскому району. Способы оплаты: наличные, безналичный расчет, онлайн-оплата картой."
+  });
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

@@ -4,12 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { CheckCircle, Package, Truck, MapPin, Phone, Mail, ArrowLeft, Loader2, ShoppingBag, CreditCard } from "lucide-react";
-import Header from "@/components/Header";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
-import Footer from "@/components/Footer";
+
 
 export default function PaymentSuccess() {
-  useSeoMeta({ title: "Оплата прошла успешно", description: "Ваш заказ успешно оплачен. Спасибо за покупку в интернет-магазине «Гатчинские закрома»!" });
   const params = useParams<{ orderNumber: string }>();
   const orderNumber = params.orderNumber || "";
   
@@ -38,42 +35,31 @@ export default function PaymentSuccess() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
   if (error || !order) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-12">
-          <Card className="max-w-md mx-auto text-center p-8">
-            <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Заказ не найден</h2>
-            <p className="text-muted-foreground mb-6">
-              К сожалению, мы не смогли найти информацию о заказе {orderNumber}
-            </p>
-            <Link href="/shop">
-              <Button>Перейти в каталог</Button>
-            </Link>
-          </Card>
-        </main>
-        <Footer />
+      <div className="container py-12">
+        <Card className="max-w-md mx-auto text-center p-8">
+          <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Заказ не найден</h2>
+          <p className="text-muted-foreground mb-6">
+            К сожалению, мы не смогли найти информацию о заказе {orderNumber}
+          </p>
+          <Link href="/shop">
+            <Button>Перейти в каталог</Button>
+          </Link>
+        </Card>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1 container py-12">
+    <div className="container py-12">
         <div className="max-w-3xl mx-auto">
           {/* Success header */}
           <div className="text-center mb-8">
@@ -241,9 +227,6 @@ export default function PaymentSuccess() {
             </Link>
           </div>
         </div>
-      </main>
-      
-      <Footer />
     </div>
   );
 }

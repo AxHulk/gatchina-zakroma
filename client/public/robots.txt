@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Запретить индексацию служебных страниц
+Disallow: /api/
+Disallow: /payment-success/
+Disallow: /payment-failed/
+Disallow: /payment-pending/
+Disallow: /cart
+Disallow: /checkout
+
+# Sitemap
+Sitemap: https://gzakroma.ru/sitemap.xml

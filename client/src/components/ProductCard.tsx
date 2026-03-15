@@ -43,6 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleBuyNow = () => {
     addToCartMutation.mutate({ productId: product.id, quantity: 1 }, {
       onSuccess: () => {
+        window.scrollTo(0, 0);
         navigate("/cart");
       },
     });

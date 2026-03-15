@@ -4,8 +4,8 @@ import { trpc } from "@/lib/trpc";
 import ProductCard from "@/components/ProductCard";
 import ContactForm from "@/components/ContactForm";
 import { ArrowRight, Leaf, Apple, Cherry, Carrot, Salad, Nut } from "lucide-react";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 const categories = [
   { name: "Ягоды", icon: Cherry, color: "bg-red-100 text-red-600", filter: "Ягоды" },
   { name: "Овощи", icon: Carrot, color: "bg-orange-100 text-orange-600", filter: "Овощи" },
@@ -16,7 +16,11 @@ const categories = [
 ];
 
 export default function Home() {
-  useSeoMeta({ title: "Главная" });
+  usePageMeta({
+    title: "Гатчинские закрома — свежие фермерские продукты с доставкой",
+    description: "Интернет-магазин фермерских продуктов в Гатчине. Свежие овощи, фрукты, молочные продукты и мясо от местных производителей. Доставка по Гатчинскому району."
+  });
+
   const { data: randomProducts = [], isLoading } = trpc.products.random.useQuery({ limit: 9 });
 
   return (

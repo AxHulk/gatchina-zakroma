@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Building, CreditCard } from "lucide-react";
-import { useSeoMeta } from "@/hooks/useSeoMeta";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 declare global {
   interface Window {
     ymaps: any;
@@ -10,7 +10,11 @@ declare global {
 }
 
 export default function Contacts() {
-  useSeoMeta({ title: "Контакты", description: "Контактная информация интернет-магазина «Гатчинские закрома». Адрес, телефон, email для связи. Мы всегда готовы ответить на ваши вопросы." });
+  usePageMeta({
+    title: "Контакты — Гатчинские закрома",
+    description: "Свяжитесь с нами: телефон, email, адрес. Гатчинские закрома — интернет-магазин фермерских продуктов в Гатчине."
+  });
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
 
