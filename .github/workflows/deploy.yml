@@ -1,73 +1,49 @@
-name: Deploy to Production Server
+name: Производственное развертывание (Production Deploy )
 
 on:
   push:
     branches:
       - main
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
 jobs:
-  deploy:
-    name: Deploy to Server
-    runs-on: ubuntu-latest
-    
+  deploy-to-vps:
+    name: Синхронизация кода с веб-сервером
+    runs-on: [self-hosted, linux, x64, production]
+
     steps:
-      - name: Checkout code
+      - name: Клонирование репозитория
         uses: actions/checkout@v4
-      
-      - name: Setup SSH
+        with:
+          fetch-depth: 1
+
+      - name: Проверка рабочего пространства агента
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-      
-      - name: Deploy to server
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+          echo "Идентификатор коммита: ${{ github.sha }}"
+          node --version
+          pnpm --version
+
+      - name: Установка зависимостей
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Сборка проекта
+        run: pnpm build
+
+      - name: Синхронизация файлов
         run: |
-          ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
-            set -e
-            echo "🚀 Starting deployment..."
-            
-            # Navigate to project directory
-            cd ${PROJECT_PATH}
-            
-            # Pull latest changes
-            echo "📥 Pulling latest changes from GitHub..."
-            git pull origin main
-            
-            # Install dependencies (if package.json changed)
-            echo "📦 Installing dependencies..."
-            npm install --production
-            
-            # Build the project
-            echo "🔨 Building project..."
-            npm run build
-            
-            # Restart PM2 process
-            echo "🔄 Restarting application..."
-            pm2 restart gatchina-zakroma
-            
-            # Clear nginx cache
-            echo "🧹 Clearing nginx cache..."
-            rm -rf /var/cache/nginx/catalog/*
-            nginx -s reload
-            
-            echo "✅ Deployment completed successfully!"
-          EOF
-      
-      - name: Verify deployment
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='README.md' \
+            --exclude='.env' \
+            --exclude='node_modules/' \
+            ${{ github.workspace }}/ /var/www/gatchina_zakroma/
+          echo "Файлы успешно перенесены в /var/www/gatchina_zakroma/"
+
+      - name: Перезапуск приложения
         run: |
-          echo "🔍 Verifying deployment..."
-          sleep 5
-          curl -f https://gzakroma.ru/ || exit 1
-          echo "✅ Site is up and running!"
-      
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed! Check the logs above for details."
+          sudo /usr/bin/pm2 restart gatchina-zakroma || sudo /usr/bin/pm2 start /var/www/gatchina_zakroma/dist/index.js --name gatchina-zakroma
+          sudo systemctl restart nginx.service
