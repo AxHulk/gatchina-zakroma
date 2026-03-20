@@ -25,6 +25,7 @@ import {
 import { notifyOwner } from "./_core/notification";
 import { sendOrderEmails } from "./mailer";
 import { buildPaymoFormData, getPaymoCheckoutUrl } from "./paymo";
+import { createCkassaInvoice, getCkassaOrderRef } from "./ckassa";
 import { updateOrderPayment } from "./db";
 
 // Helper to get or create session ID from cookies
@@ -213,7 +214,7 @@ export const appRouter = router({
         deliveryAddress: z.string().optional(),
         deliveryCity: z.string().optional(),
         deliveryComment: z.string().optional(),
-        paymentMethod: z.enum(['cash', 'card', 'invoice', 'online']),
+        paymentMethod: z.enum(['cash', 'card', 'invoice', 'online', 'ckassa']),
       }))
       .mutation(async ({ ctx, input }) => {
         const sessionId = getSessionId(ctx);
@@ -238,6 +239,7 @@ export const appRouter = router({
           card: 'Картой при получении',
           invoice: 'Безналичный расчет',
           online: 'Онлайн-оплата (Paymo)',
+          ckassa: 'Онлайн-оплата (CKassa)',
         }[input.paymentMethod];
         
         // Notify owner about new order (optional, non-blocking)
@@ -277,6 +279,35 @@ export const appRouter = router({
           console.error(`[Orders] Email sending failed for ${order.orderNumber}:`, err);
         });
         
+        // If CKassa payment, create invoice and return redirect URL
+        if (input.paymentMethod === 'ckassa') {
+          const orderRef = getCkassaOrderRef(order.orderNumber);
+          const ckassaResult = await createCkassaInvoice({
+            orderRef,
+            amountKopecks: order.total ?? 0,
+            invType: 'READ_ONLY',
+          });
+
+          if (!ckassaResult.success || !ckassaResult.paymentUrl) {
+            throw new Error(`Ошибка создания платежа CKassa: ${ckassaResult.error}`);
+          }
+
+          await updateOrderPayment({
+            orderNumber: order.orderNumber,
+            paymentProvider: 'ckassa',
+            paymentStatus: 'pending',
+            paymentUrl: ckassaResult.paymentUrl,
+          });
+
+          return {
+            success: true,
+            orderNumber: order.orderNumber,
+            total: order.total,
+            paymentUrl: ckassaResult.paymentUrl,
+            paymentFormData: null,
+          };
+        }
+
         // If online payment, generate Paymo payment data
         if (input.paymentMethod === 'online') {
           const baseUrl = `https://${ctx.req.headers.host || 'gzakroma.ru'}`;

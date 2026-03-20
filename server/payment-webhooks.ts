@@ -3,6 +3,7 @@ import { confirmOrderPayment, failOrderPayment, getOrderByNumber, getOrderByPaym
 import { notifyOwner } from "./_core/notification";
 import { verifyPaymoCallbackSignature } from "./paymo";
 import { sendOrderEmails } from "./mailer";
+import { getCkassaNewPayments, getCkassaOrderRef } from "./ckassa";
 
 const router = Router();
 
@@ -295,61 +296,150 @@ router.post("/paymaster/webhook", async (req: Request, res: Response) => {
 });
 
 /**
- * Webhook endpoint for Ckassa payment notifications
- * URL: /api/payment/ckassa/webhook
- * 
- * When you integrate Ckassa, configure this URL as the callback URL
- * in your Ckassa merchant settings.
+ * CKassa: Polling новых платежей
+ * URL: /api/payment/ckassa/poll
+ *
+ * CKassa не отправляет webhook — вместо этого используется polling метода GET /payments/new.
+ * Этот endpoint вызывается по расписанию (cron) или вручную.
+ * Также можно настроить вызов из внешнего cron-сервиса.
  */
-router.post("/ckassa/webhook", async (req: Request, res: Response) => {
+router.post("/ckassa/poll", async (req: Request, res: Response) => {
   try {
-    console.log("[Ckassa Webhook] Received:", JSON.stringify(req.body));
-    
-    // Extract data from Ckassa notification
-    // Note: Adjust field names according to actual Ckassa API documentation
-    const {
-      orderId,
-      paymentId,
-      status,
-      amount,
-      currency,
-      signature,
-    } = req.body;
-    
-    if (!orderId) {
-      console.error("[Ckassa Webhook] Missing order ID");
-      return res.status(400).json({ error: "Missing order ID" });
+    console.log("[CKassa Poll] Fetching new payments...");
+
+    const payments = await getCkassaNewPayments();
+
+    if (!payments || payments.length === 0) {
+      console.log("[CKassa Poll] No new payments");
+      return res.json({ processed: 0 });
     }
-    
-    // Verify the signature (in production, verify signature with Ckassa secret)
-    // TODO: Add signature verification when you have Ckassa secret key
-    
-    if (status === "success" || status === "paid" || status === "completed") {
-      // Confirm the payment
-      const order = await confirmOrderPayment(orderId, paymentId);
-      
-      if (order) {
-        // Notify owner about successful payment
-        await notifyOwner({
-          title: `💳 Оплата получена: ${orderId}`,
-          content: `Заказ ${orderId} оплачен через Ckassa.\n\nСумма: ${(order.total / 100).toFixed(2)} ₽\nКлиент: ${order.customerName}\nТелефон: ${order.customerPhone}`,
-        });
-        
-        console.log(`[Ckassa Webhook] Order ${orderId} payment confirmed`);
+
+    console.log(`[CKassa Poll] Got ${payments.length} payment(s)`);
+    let processed = 0;
+
+    for (const payment of payments) {
+      try {
+        // Извлекаем orderRef из properties (первый элемент массива)
+        const orderRef = payment.properties?.[0]?.value;
+        if (!orderRef) {
+          console.warn("[CKassa Poll] Payment without orderRef:", payment.regPayNum);
+          continue;
+        }
+
+        const regPayNum = payment.regPayNum;
+        const state = payment.state;
+
+        console.log(`[CKassa Poll] Payment ${regPayNum}: orderRef=${orderRef}, state=${state}`);
+
+        // Ищем заказ по orderRef — он совпадает с getCkassaOrderRef(order.orderNumber)
+        // Перебираем все заказы со статусом pending и сравниваем
+        // Используем getOrderByPaymentId как fallback, если уже сохранён regPayNum
+        let order = await getOrderByPaymentId(regPayNum);
+
+        if (!order) {
+          // Ищем по paymentUrl или через прямой поиск по orderRef
+          // Поскольку orderRef — это последние 12 символов orderNumber без дефисов,
+          // нам нужно найти заказ, у которого getCkassaOrderRef(orderNumber) === orderRef
+          // Используем вспомогательный поиск через getOrderByNumber с разными форматами
+          // Пробуем восстановить полный номер заказа из orderRef
+          // Формат: GZ-XXXXXXXX-XXXX -> stripped = GZXXXXXXXXXXXX -> last 12 = XXXXXXXXXX (без GZ)
+          // Поэтому ищем заказы, у которых orderNumber.replace(/[^A-Z0-9]/gi,'').slice(-12) === orderRef
+          console.log(`[CKassa Poll] Order not found by paymentId, trying orderRef search for: ${orderRef}`);
+        }
+
+        if (state === "PAYED") {
+          if (order) {
+            // Уже найден по regPayNum — просто подтверждаем
+            await confirmOrderPayment(order.orderNumber, regPayNum);
+            console.log(`[CKassa Poll] Order ${order.orderNumber} confirmed (already linked)`);
+          } else {
+            // Ищем заказ через специальный endpoint
+            const foundOrder = await findOrderByRef(orderRef);
+            if (foundOrder) {
+              await confirmOrderPayment(foundOrder.orderNumber, regPayNum);
+              await notifyOwner({
+                title: `Оплата получена: ${foundOrder.orderNumber}`,
+                content: `Заказ ${foundOrder.orderNumber} оплачен через CKassa.\n\nСумма: ${(payment.amount / 100).toFixed(2)} ₽\nНомер платежа: ${regPayNum}\nКлиент: ${foundOrder.customerName}\nТелефон: ${foundOrder.customerPhone}`,
+              }).catch(err => console.error("[CKassa Poll] Notify error:", err.message));
+
+              // Отправляем email
+              sendOrderEmails({
+                orderNumber: foundOrder.orderNumber,
+                customerName: foundOrder.customerName,
+                customerEmail: foundOrder.customerEmail,
+                customerPhone: foundOrder.customerPhone,
+                deliveryMethod: foundOrder.deliveryMethod as "pickup" | "delivery",
+                deliveryAddress: foundOrder.deliveryAddress || undefined,
+                deliveryCity: foundOrder.deliveryCity || undefined,
+                deliveryComment: foundOrder.deliveryComment || undefined,
+                paymentMethod: "online" as const,
+                items: foundOrder.items?.map((item: any) => ({
+                  productTitle: item.productTitle,
+                  quantity: item.quantity,
+                  unit: item.unit ?? null,
+                  price: item.price,
+                  subtotal: item.subtotal,
+                })) || [],
+                subtotal: foundOrder.subtotal ?? 0,
+                deliveryFee: foundOrder.deliveryFee ?? 0,
+                total: foundOrder.total ?? 0,
+              }).catch(err => console.error("[CKassa Poll] Email error:", err));
+
+              console.log(`[CKassa Poll] Order ${foundOrder.orderNumber} payment confirmed via CKassa`);
+              processed++;
+            } else {
+              console.warn(`[CKassa Poll] Cannot find order for orderRef=${orderRef}`);
+            }
+          }
+        } else if (state === "FAILED" || state === "CANCELLED" || state === "DECLINED") {
+          if (order) {
+            await failOrderPayment(order.orderNumber, regPayNum);
+            console.log(`[CKassa Poll] Order ${order.orderNumber} payment failed`);
+          } else {
+            const foundOrder = await findOrderByRef(orderRef);
+            if (foundOrder) {
+              await failOrderPayment(foundOrder.orderNumber, regPayNum);
+              console.log(`[CKassa Poll] Order ${foundOrder.orderNumber} payment failed via CKassa`);
+            }
+          }
+        }
+      } catch (paymentError: any) {
+        console.error(`[CKassa Poll] Error processing payment ${payment.regPayNum}:`, paymentError.message);
       }
-    } else if (status === "failed" || status === "cancelled" || status === "error") {
-      // Mark payment as failed
-      await failOrderPayment(orderId, paymentId);
-      console.log(`[Ckassa Webhook] Order ${orderId} payment failed`);
     }
-    
-    // Return success response
-    res.status(200).json({ success: true });
+
+    res.json({ processed, total: payments.length });
   } catch (error) {
-    console.error("[Ckassa Webhook] Error:", error);
+    console.error("[CKassa Poll] Error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+/**
+ * Вспомогательная функция: найти заказ по orderRef (короткому номеру для CKassa)
+ */
+async function findOrderByRef(orderRef: string) {
+  // Получаем все заказы с paymentProvider=ckassa и paymentStatus=pending
+  // и ищем тот, у которого getCkassaOrderRef(orderNumber) === orderRef
+  const { getDb } = await import("./db");
+  const { orders } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+
+  const db = await getDb();
+  if (!db) return null;
+
+  const rows = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.paymentProvider, "ckassa"), eq(orders.paymentStatus, "pending")));
+
+  for (const row of rows) {
+    if (getCkassaOrderRef(row.orderNumber) === orderRef) {
+      return getOrderByNumber(row.orderNumber);
+    }
+  }
+  return null;
+}
 
 /**
  * Generic webhook endpoint for testing

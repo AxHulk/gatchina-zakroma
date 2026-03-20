@@ -32,13 +32,13 @@ export default function Checkout() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryComment, setDeliveryComment] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice" | "online">("online");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "invoice" | "online" | "ckassa">("ckassa");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   
   const createOrderMutation = trpc.orders.create.useMutation({
     onSuccess: (data) => {
       if (data.paymentUrl && data.paymentFormData) {
-        // Online payment - submit hidden form to Paymo
+        // Paymo: перенаправление через POST-форму
         toast.success("Перенаправляем на страницу оплаты...");
         
         const form = document.createElement("form");
@@ -56,8 +56,12 @@ export default function Checkout() {
         
         document.body.appendChild(form);
         form.submit();
+      } else if (data.paymentUrl && !data.paymentFormData) {
+        // CKassa: простой редирект по URL
+        toast.success("Перенаправляем на страницу оплаты CKassa...");
+        window.location.href = data.paymentUrl;
       } else {
-        // Regular payment - redirect to success page
+        // Обычный заказ без онлайн-оплаты
         toast.success("Заказ успешно оформлен!");
         setLocation(`/order-success/${data.orderNumber}`);
       }
@@ -285,16 +289,27 @@ export default function Checkout() {
                 <CardContent>
                   <RadioGroup
                     value={paymentMethod}
-                    onValueChange={(value) => setPaymentMethod(value as "cash" | "card" | "invoice" | "online")}
+                    onValueChange={(value) => setPaymentMethod(value as "cash" | "card" | "invoice" | "online" | "ckassa")}
                     className="space-y-3"
                   >
-                    <div className="flex items-center space-x-3 p-4 border-2 border-primary/50 rounded-lg bg-primary/5 hover:border-primary transition-colors cursor-pointer">
-                      <RadioGroupItem value="online" id="online" />
-                      <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <div className={`flex items-center space-x-3 p-4 border-2 rounded-lg transition-colors cursor-pointer ${paymentMethod === "ckassa" ? "border-primary/50 bg-primary/5" : "border-muted hover:border-primary/30"}`}>
+                      <RadioGroupItem value="ckassa" id="ckassa" />
+                      <Label htmlFor="ckassa" className="flex items-center gap-2 cursor-pointer flex-1">
                         <Globe className="h-5 w-5 text-primary" />
                         <div>
-                          <span className="font-medium">Оплата онлайн</span>
+                          <span className="font-medium">Оплата онлайн (CKassa)</span>
                           <p className="text-xs text-muted-foreground font-normal mt-0.5">Банковской картой через безопасный платежный шлюз</p>
+                        </div>
+                      </Label>
+                    </div>
+
+                    <div className={`flex items-center space-x-3 p-4 border-2 rounded-lg transition-colors cursor-pointer ${paymentMethod === "online" ? "border-primary/50 bg-primary/5" : "border-muted hover:border-primary/30"}`}>
+                      <RadioGroupItem value="online" id="online" />
+                      <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Globe className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <span className="font-medium">Оплата онлайн (Paymo)</span>
+                          <p className="text-xs text-muted-foreground font-normal mt-0.5">Банковской картой через Paymo</p>
                         </div>
                       </Label>
                     </div>
@@ -400,7 +415,7 @@ export default function Checkout() {
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Оформление...
                       </>
-                    ) : paymentMethod === "online" ? (
+                    ) : paymentMethod === "online" || paymentMethod === "ckassa" ? (
                       <>
                         <Globe className="h-4 w-4 mr-2" />
                         Оформить и оплатить онлайн
