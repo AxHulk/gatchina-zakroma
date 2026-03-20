@@ -51,6 +51,44 @@ async function startServer() {
   app.use("/api/payment", paymentWebhooks);
   // Catalog API under /api/catalog
   app.use("/api/catalog", catalogApi);
+
+  /**
+   * CKassa Callback Proxy
+   * URL: /api/ckassa/callback
+   *
+   * Схема: ЦКасса → gzakroma.ru/api/ckassa/callback → payin.edro.tech/ckassa/api/v1/payments/callback
+   * Логируется в админке как source=ckassa_callback
+   */
+  app.post("/api/ckassa/callback", async (req: any, res: any) => {
+    const FORWARD_URL = "https://payin.edro.tech/ckassa/api/v1/payments/callback";
+    try {
+      // 1. Логируем входящий запрос от ЦКассы
+      console.log("[CKassa Callback] Received:", JSON.stringify(req.body));
+
+      // 2. Пересылаем запрос на payin.edro.tech
+      const forwardResponse = await fetch(FORWARD_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req.body),
+      });
+
+      const responseText = await forwardResponse.text();
+      console.log(`[CKassa Callback] Forwarded to payin.edro.tech, status: ${forwardResponse.status}, response: ${responseText}`);
+
+      // 3. Возвращаем ответ от payin.edro.tech обратно ЦКассе
+      res.status(forwardResponse.status).send(responseText);
+    } catch (error: any) {
+      console.error("[CKassa Callback] Forward failed:", error.message);
+
+      // 4. При ошибке — уведомляем владельца и возвращаем success (чтобы не было повторных попыток)
+      notifyOwner({
+        title: "⚠️ Ошибка проброса callback CKassa",
+        content: `Ошибка: ${error.message}\nДанные: ${JSON.stringify(req.body)}`,
+      }).catch(() => {});
+
+      res.json({ success: true, warning: "Forward failed" });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

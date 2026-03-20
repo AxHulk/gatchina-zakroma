@@ -31,6 +31,7 @@ function classifySource(path: string): string {
   if (path.includes("/api/payment/paymo")) return "paymo_callback";
   if (path.includes("/api/payment/paymaster")) return "paymaster_callback";
   if (path.includes("/api/payment/ckassa")) return "ckassa_callback";
+  if (path.includes("/api/ckassa")) return "ckassa_callback";
   if (path.includes("/api/payment")) return "payment";
   if (path.includes("/api/trpc/orders")) return "order";
   if (path.includes("/api/trpc/cart")) return "cart";
