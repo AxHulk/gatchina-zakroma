@@ -54,7 +54,7 @@ export async function createCkassaInvoice(params: CkassaInvoiceParams): Promise<
 
   const requestBody = {
     servCode: CKASSA_SERV_CODE,
-    startPaySelect: false,
+    startPaySelect: true,
     invType,
     amount: amountKopecks,
     // properties: передаём только значение реквизита (value), без названия (name)
