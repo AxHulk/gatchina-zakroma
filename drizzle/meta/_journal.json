@@ -29,6 +29,20 @@
       "when": 1765445483254,
       "tag": "0003_steady_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1742461200000,
+      "tag": "0004_admin_request_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1742461300000,
+      "tag": "0005_add_ckassa_payment",
+      "breakpoints": true
     }
   ]
 }

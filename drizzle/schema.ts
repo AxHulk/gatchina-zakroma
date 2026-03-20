@@ -89,7 +89,7 @@ export const orders = mysqlTable("orders", {
   deliveryComment: text("deliveryComment"),
   
   // Payment info
-  paymentMethod: mysqlEnum("paymentMethod", ["cash", "card", "invoice", "online"]).notNull().default("cash"),
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "card", "invoice", "online", "ckassa"]).notNull().default("cash"),
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "processing", "paid", "failed", "refunded"]).notNull().default("pending"),
   paymentId: varchar("paymentId", { length: 128 }),
   paymentProvider: varchar("paymentProvider", { length: 32 }),
